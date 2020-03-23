@@ -3,20 +3,33 @@
     "description": "Resource schema for Activity",
     "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-stepfunctions.git",
     "definitions": {
-        "TagEntry": {
+        "TagsEntry": {
             "type": "object",
             "properties": {
                 "Key": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
                 },
                 "Value": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
                 }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "required": [
+                "Key",
+                "Value"
+            ]
         }
     },
     "properties": {
+        "Id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+        },
         "Name": {
             "type": "string",
             "minLength": 1,
@@ -24,8 +37,9 @@
         },
         "Tags": {
             "type": "array",
+            "uniqueItems": false,
             "items": {
-                "$ref": "#/definitions/TagEntry"
+                "$ref": "#/definitions/TagsEntry"
             }
         }
     },
@@ -33,21 +47,19 @@
     "required": [
         "Name"
     ],
-    "readOnlyProperties": [
-        "/properties/Name"
-    ],
     "createOnlyProperties": [
         "/properties/Name"
     ],
     "primaryIdentifier": [
-        "/properties/Name"
+        "/properties/Id"
+    ],
+    "readOnlyProperties": [
+        "/properties/Id"
     ],
     "handlers": {
         "create": {
             "permissions": [
-                "states:CreateActivity",
-                "states:TagResource",
-                "states:UntagResource"
+                "states:CreateActivity"
             ]
         },
         "read": {
@@ -63,8 +75,7 @@
         },
         "delete": {
             "permissions": [
-                "states:DeleteActivity",
-                "states:UntagResource"
+                "states:DeleteActivity"
             ]
         }
     }

@@ -1,8 +1,8 @@
-# AWS::StepFunctions::Activity
+# AWS::StepFunctions::StateMachine
 
 Congratulations on starting development! Next steps:
 
-1. Write the JSON schema describing your resource, `aws-stepfunctions-activity.json`
+1. Write the JSON schema describing your resource, `aws-stepfunctions-statemachine.json`
 2. The RPDK will automatically generate the correct resource model from the
    schema whenever the project is built via Maven. You can also do this manually
    with the following command: `cfn generate`
