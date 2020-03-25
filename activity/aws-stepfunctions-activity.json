@@ -54,7 +54,8 @@
         "/properties/Id"
     ],
     "readOnlyProperties": [
-        "/properties/Id"
+        "/properties/Id",
+        "/properties/Name"
     ],
     "handlers": {
         "create": {
@@ -69,6 +70,7 @@
         },
         "update": {
             "permissions": [
+                "states:ListTagsForResource",
                 "states:TagResource",
                 "states:UntagResource"
             ]
