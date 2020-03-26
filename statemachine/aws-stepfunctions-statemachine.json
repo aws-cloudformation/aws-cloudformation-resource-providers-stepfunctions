@@ -125,7 +125,8 @@
     "handlers": {
         "create": {
             "permissions": [
-                "states:CreateStateMachine"
+                "states:CreateStateMachine",
+                "iam:PassRole"
             ]
         },
         "read": {
@@ -137,7 +138,8 @@
             "permissions": [
                 "states:UpdateStateMachine",
                 "states:TagResource",
-                "states:UntagResource"
+                "states:UntagResource",
+                "iam:PassRole"
             ]
         },
         "delete": {

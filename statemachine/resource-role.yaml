@@ -23,6 +23,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                - "iam:PassRole"
                 - "states:CreateStateMachine"
                 - "states:DeleteStateMachine"
                 - "states:DescribeStateMachine"
