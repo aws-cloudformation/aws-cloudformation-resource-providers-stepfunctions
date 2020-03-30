@@ -9,6 +9,10 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
 
+    /**
+     * Generic strategy to handle errors.
+     * https://w.amazon.com/bin/view/AWS21/Design/Uluru/HandlerContract/
+     */
     protected ProgressEvent<ResourceModel, CallbackContext> handleDefaultError(ResourceHandlerRequest<ResourceModel> request, Exception e) {
         ProgressEvent.ProgressEventBuilder<ResourceModel, CallbackContext> resultBuilder = ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(request.getDesiredResourceState());
@@ -34,19 +38,19 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
                     resultBuilder.status(OperationStatus.FAILED);
                 }
             } else {
-                // 500s default to FAILED
-                resultBuilder.errorCode(HandlerErrorCode.GeneralServiceException);
+                // 500s default to FAILED but Retriable (ErrorCode = ServiceInternalError)
+                resultBuilder.errorCode(HandlerErrorCode.ServiceInternalError);
                 resultBuilder.message(Constants.INTERNAL_FAILURE_MESSAGE);
                 resultBuilder.status(OperationStatus.FAILED);
             }
             resultBuilder.message(e.getMessage());
         } else if (e instanceof TerminalException) {
-            resultBuilder.errorCode(HandlerErrorCode.GeneralServiceException);
+            resultBuilder.errorCode(HandlerErrorCode.InternalFailure);
             resultBuilder.message(e.getMessage());
             resultBuilder.status(OperationStatus.FAILED);
         } else {
             // Unexpected exceptions default to be InternalFailure
-            resultBuilder.errorCode(HandlerErrorCode.GeneralServiceException);
+            resultBuilder.errorCode(HandlerErrorCode.InternalFailure);
             resultBuilder.message(Constants.INTERNAL_FAILURE_MESSAGE);
             resultBuilder.status(OperationStatus.FAILED);
         }
