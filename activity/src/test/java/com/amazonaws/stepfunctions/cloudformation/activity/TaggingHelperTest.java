@@ -132,8 +132,8 @@ public class TaggingHelperTest extends HandlerTestBase {
                 new Tag().withKey("K4").withValue("V4")
         ));
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(untagResourceRequest), Mockito.any())).thenReturn(new UntagResourceResult());
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(tagResourceRequest), Mockito.any())).thenReturn(new TagResourceResult());
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any()))
+                .thenReturn(new UntagResourceResult(), new TagResourceResult());
 
         TaggingHelper.updateTags(ACTIVITY_ARN, previousTags, currentTags, proxy, client);
 

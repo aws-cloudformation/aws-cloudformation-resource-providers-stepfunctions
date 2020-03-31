@@ -6,7 +6,7 @@ import com.amazonaws.retry.RetryPolicy;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineRequest;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ClientBuilderTest {
 

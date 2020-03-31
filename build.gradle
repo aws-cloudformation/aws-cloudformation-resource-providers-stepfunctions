@@ -1,0 +1,30 @@
+description "AWS CloudFormation Resource Providers - Step Functions"
+
+allprojects {
+    version '1.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+task release
+
+def projectsToRelease = [
+    "activity", "statemachine"
+].collect { project(it) }
+
+// Copy all resource providers to folder `packaging_additional_published_artifacts` for deployment
+configure(projectsToRelease) {
+    task release(dependsOn: assemble) {
+        group 'build'
+        description 'Build the project and copy the RPDK package to brazil'
+        doLast {
+            copy {
+                from "${project.buildDir}/rpdk"
+                into rootProject.file('build/packaging_additional_published_artifacts')
+            }
+        }
+    }
+    rootProject.release.dependsOn(release)
+}

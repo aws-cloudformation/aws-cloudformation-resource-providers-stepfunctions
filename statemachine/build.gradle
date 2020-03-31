@@ -1,0 +1,81 @@
+plugins {
+    id 'java'
+
+    // To build a shadow jar of this resource provider
+    id 'com.github.johnrengelman.shadow' version '4.0.2'
+}
+
+
+def resource_name_with_dashes = 'aws-stepfunctions-statemachine'
+def schema_file = "${resource_name_with_dashes}.json"
+
+description 'CloudFormation Resource Provider - AWS::StepFunctions::StateMachine'
+
+// Include RPDK generated source by `cfn generate`
+sourceSets.main.java.srcDirs += ['target/generated-sources/rpdk']
+
+// Include schema into jar
+sourceSets.main.resources {
+    srcDir 'target/schema'
+    include schema_file
+}
+
+dependencies {
+    compile brazilGradle.build()
+    testCompile brazilGradle.testbuild()
+}
+
+test {
+    useJUnitPlatform()
+    environment 'AWS_REGION', 'us-east-1'
+}
+
+// Generate RPDK wrapper source before compile
+task rpdkGenerateSource(type: Exec) {
+    workingDir '.'
+    executable = "${brazilGradle.path('tool.runtimefarm')}/bin/cfn"
+    args = ['generate']
+}
+
+task copySchema(type: Copy) {
+    from(".") {
+        include schema_file
+    }
+    into "target/schema"
+}
+
+compileJava.dependsOn(rpdkGenerateSource, copySchema)
+
+// Run the tests by default
+release.dependsOn(check)
+
+// Build a shadow jar for resource provider
+shadowJar {
+    // cfn-cli requires the artifact under target and suffixed with SNAPSHOT.jar
+    classifier = null
+    baseName = "${resource_name_with_dashes}"
+    destinationDir = file('./target')
+}
+
+task cfnPackage(type: Exec) {
+    dependsOn shadowJar
+    workingDir '.'
+    executable = "${brazilGradle.path('tool.runtimefarm')}/bin/cfn"
+    args = ['submit', '--dry-run']
+}
+
+// Use `cfn-cli` to build a RPDK package include resource provider shadow jar, schema etc.
+task rpdkPackage(type: Zip) {
+    dependsOn cfnPackage
+    from zipTree("${resource_name_with_dashes}.zip")
+    destinationDir = file('./build/rpdk')
+    archiveName("${resource_name_with_dashes}.zip")
+}
+
+assemble.dependsOn(rpdkPackage)
+
+// Delete target folder for clean
+clean.doLast {
+    file('./target').deleteDir()
+    file("${resource_name_with_dashes}.zip").delete()
+}
