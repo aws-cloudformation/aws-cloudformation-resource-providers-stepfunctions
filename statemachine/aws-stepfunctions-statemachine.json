@@ -61,6 +61,47 @@
                     }
                 }
             }
+        },
+        "TracingConfiguration": {
+            "type": "object",
+            "properties": {
+                "Enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "DefinitionS3": {
+            "type": "object",
+            "properties": {
+                "Bucket": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 63
+                },
+                "Key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                },
+                "Version": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                }
+            },
+            "required": [
+                "Bucket", "Key"
+            ]
+        },
+        "ResourceMappings": {
+            "type": "object",
+            "patternProperties": {
+                "^[A-Za-z0-9]{1,64}$": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
         }
     },
     "properties": {
@@ -98,6 +139,15 @@
         },
         "LoggingConfiguration": {
             "$ref": "#/definitions/LoggingConfiguration"
+        },
+        "TracingConfiguration": {
+            "$ref": "#/definitions/TracingConfiguration"
+        },
+        "DefinitionS3": {
+            "$ref": "#/definitions/DefinitionS3"
+        },
+        "ResourceMappings": {
+            "$ref": "#/definitions/ResourceMappings"
         },
         "Tags": {
             "type": "array",
