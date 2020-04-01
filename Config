@@ -30,6 +30,7 @@ package.AWSCloudFormationResourceProvidersStepFunctions = {
         1.0 = {
             AWSCloudFormationRPDKJavaPlugin = 1.1;
             AWSStepFunctionsJavaClient = 1.11.x;
+            AWSS3JavaClient = 1.11.x;
         };
     };
 

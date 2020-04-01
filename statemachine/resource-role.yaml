@@ -24,6 +24,7 @@ Resources:
               - Effect: Allow
                 Action:
                 - "iam:PassRole"
+                - "s3:GetObject"
                 - "states:CreateStateMachine"
                 - "states:DeleteStateMachine"
                 - "states:DescribeStateMachine"

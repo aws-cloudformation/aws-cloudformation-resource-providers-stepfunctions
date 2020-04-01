@@ -4,6 +4,7 @@ import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineRequest;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineResult;
 import com.amazonaws.services.stepfunctions.model.Tag;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -36,6 +37,19 @@ public class CreateHandler extends ResourceHandler {
                 model.setStateMachineName(IdentifierUtils.generateResourceIdentifier(
                     request.getLogicalResourceIdentifier(), request.getClientRequestToken())
                 );
+            }
+
+            // Fetch S3 definition and apply resource mappings.
+            if (model.getDefinitionS3() == null && model.getDefinitionString() == null) {
+                throw new CfnInvalidRequestException(Constants.DEFINITION_MISSING_ERROR_MESSAGE);
+            }
+
+            if (model.getDefinitionS3() != null) {
+                model.setDefinitionString(fetchS3Definition(model.getDefinitionS3(), proxy));
+            }
+
+            if (model.getResourceMappings() != null) {
+                model.setDefinitionString(transformDefinition(model.getDefinitionString(), model.getResourceMappings()));
             }
 
             CreateStateMachineRequest createStateMachineRequest = new CreateStateMachineRequest();

@@ -1,7 +1,13 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineRequest;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineResult;
+import com.amazonaws.stepfunctions.cloudformation.statemachine.s3.GetObjectFunction;
+import com.amazonaws.stepfunctions.cloudformation.statemachine.s3.GetObjectResult;
+import com.amazonaws.util.StringInputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +18,8 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -77,6 +85,92 @@ public class CreateHandlerTest extends HandlerTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getMessage()).isEqualTo(exception500.getMessage());
+    }
+
+    @Test
+    public void testDefinitionReplacement() {
+        String definition = "{\n" +
+                "  \"States\": {\n" +
+                "    \"lambda_01\": {\n" +
+                "      \"Resource\": \"${lambdaArn01}\"\n" +
+                "    },\n" +
+                "    \"lambda_02\": {\n" +
+                "      \"Resource\": \"${lambdaArn02}\"\n" +
+                "    },\n" +
+                "    \"lambda_03\": {\n" +
+                "      \"Parameters\": {\n" +
+                "        \"Lambda01\": \"${lambdaArn01}\"\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        Map<String, String> resourceMappings = new HashMap<>();
+        resourceMappings.put("lambdaArn01", "lambdaArn01");
+        resourceMappings.put("lambdaArn02", "lambdaArn02");
+
+        request.getDesiredResourceState().setResourceMappings(resourceMappings);
+        request.getDesiredResourceState().setDefinitionString(definition);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        String transformedDefinition = response.getResourceModel().getDefinitionString();
+
+        assertThat(!transformedDefinition.contains("${lambdaArn01}")).isTrue();
+        assertThat(!transformedDefinition.contains("${lambdaArn02}")).isTrue();
+    }
+
+    @Test
+    public void testDefinitionFromS3() throws Exception {
+        request.getDesiredResourceState().setDefinitionS3(new DefinitionS3("Bucket", "Key", "1"));
+
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectContent(new StringInputStream("{}"));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getDefinitionString()).isEqualTo("{}");
+    }
+
+    @Test
+    public void testGetObjectFunction() {
+        AmazonS3 client = Mockito.mock(AmazonS3.class);
+
+        S3Object s3Object = new S3Object();
+        GetObjectRequest request = new GetObjectRequest("Bucket", "Key");
+
+        GetObjectFunction function = new GetObjectFunction(client);
+
+        Mockito.when(client.getObject(request)).thenReturn(s3Object);
+
+        assertThat(function.get(request)).isEqualTo(new GetObjectResult(s3Object));
+    }
+
+    @Test
+    public void testWithoutDefinition() {
+        request.getDesiredResourceState().setDefinitionString(null);
+        request.getDesiredResourceState().setDefinitionS3(null);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
     }
 
 }

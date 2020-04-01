@@ -8,4 +8,5 @@ public class Constants {
     public static final String MANAGED_RULE_EXCEPTION_MESSAGE_SUBSTRING = "managed-rule";
     public static final String STS_AUTHORIZED_TO_ASSUME_MESSAGE_SUBSTRING =
             "Neither the global service principal states.amazonaws.com, nor the regional one is authorized to assume the provided role";
+    public static final String DEFINITION_MISSING_ERROR_MESSAGE = "Model Validation Failed (#: Required key [DefinitionS3] or [Definition] not found.)";
 }

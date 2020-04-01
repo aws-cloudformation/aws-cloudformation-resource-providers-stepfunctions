@@ -6,10 +6,16 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.retry.RetryPolicy;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.AWSStepFunctionsClientBuilder;
 
 public class ClientBuilder {
+
+    public static AmazonS3 getS3Client() {
+        return AmazonS3ClientBuilder.standard().build();
+    }
 
     public static AWSStepFunctions getClient() {
         ClientConfiguration clientConfiguration = new ClientConfiguration()

@@ -5,6 +5,7 @@ import com.amazonaws.services.stepfunctions.AWSStepFunctionsClientBuilder;
 import com.amazonaws.services.stepfunctions.model.Tag;
 import com.amazonaws.services.stepfunctions.model.UpdateStateMachineRequest;
 import com.google.common.collect.Sets;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -31,6 +32,19 @@ public class UpdateHandler extends ResourceHandler {
         try {
             AWSStepFunctions sfnClient = AWSStepFunctionsClientBuilder.defaultClient();
 
+            // Fetch S3 definition and apply resource mappings.
+            if (model.getDefinitionS3() == null && model.getDefinitionString() == null) {
+                throw new CfnInvalidRequestException(Constants.DEFINITION_MISSING_ERROR_MESSAGE);
+            }
+
+            if (model.getDefinitionS3() != null) {
+                model.setDefinitionString(fetchS3Definition(model.getDefinitionS3(), proxy));
+            }
+
+            if (model.getResourceMappings() != null) {
+                model.setDefinitionString(transformDefinition(model.getDefinitionString(), model.getResourceMappings()));
+            }
+
             UpdateStateMachineRequest updateStateMachineRequest = new UpdateStateMachineRequest();
             updateStateMachineRequest.setStateMachineArn(model.getId());
             updateStateMachineRequest.setRoleArn(model.getRoleArn());
@@ -55,15 +69,15 @@ public class UpdateHandler extends ResourceHandler {
     }
 
     private void updateTags(ResourceHandlerRequest<ResourceModel> request, AmazonWebServicesClientProxy proxy, AWSStepFunctions sfnClient) {
-        String activityArn = request.getDesiredResourceState().getId();
+        String stateMachineArn = request.getDesiredResourceState().getId();
 
-        List<Tag> previousUserTags = TaggingHelper.listTagsForResource(activityArn, proxy, sfnClient);
+        List<Tag> previousUserTags = TaggingHelper.listTagsForResource(stateMachineArn, proxy, sfnClient);
 
         Set<Tag> currentUserTags = new HashSet<>();
         currentUserTags.addAll(TaggingHelper.transformTags(request.getDesiredResourceState().getTags()));
         currentUserTags.addAll(TaggingHelper.transformTags(request.getDesiredResourceTags()));
 
-        TaggingHelper.updateTags(activityArn, Sets.newHashSet(previousUserTags), currentUserTags, proxy, sfnClient);
+        TaggingHelper.updateTags(stateMachineArn, Sets.newHashSet(previousUserTags), currentUserTags, proxy, sfnClient);
     }
 
 }

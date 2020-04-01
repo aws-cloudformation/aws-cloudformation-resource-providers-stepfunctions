@@ -1,5 +1,6 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
+import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.stepfunctions.model.ListTagsForResourceResult;
 import com.amazonaws.services.stepfunctions.model.Tag;
 import com.amazonaws.services.stepfunctions.model.TagResourceRequest;
@@ -7,6 +8,9 @@ import com.amazonaws.services.stepfunctions.model.TagResourceResult;
 import com.amazonaws.services.stepfunctions.model.UntagResourceRequest;
 import com.amazonaws.services.stepfunctions.model.UntagResourceResult;
 import com.amazonaws.services.stepfunctions.model.UpdateStateMachineRequest;
+import com.amazonaws.services.stepfunctions.model.UpdateStateMachineResult;
+import com.amazonaws.stepfunctions.cloudformation.statemachine.s3.GetObjectResult;
+import com.amazonaws.util.StringInputStream;
 import com.google.common.collect.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -109,6 +113,28 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+    }
+
+    @Test
+    public void testDefinitionFromS3() throws Exception {
+        request.getDesiredResourceState().setDefinitionS3(new DefinitionS3("Bucket", "Key", "1"));
+
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectContent(new StringInputStream("{}"));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        UpdateStateMachineResult updateStateMachineResult = new UpdateStateMachineResult();
+        ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any()))
+                .thenReturn(getObjectResult, updateStateMachineResult, listTagsForResourceResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getDefinitionString()).isEqualTo("{}");
     }
 
 }

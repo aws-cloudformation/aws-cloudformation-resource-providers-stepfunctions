@@ -2,6 +2,7 @@ package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
 import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.model.ListTagsForResourceRequest;
+import com.amazonaws.services.stepfunctions.model.ListTagsForResourceResult;
 import com.amazonaws.services.stepfunctions.model.Tag;
 import com.amazonaws.services.stepfunctions.model.TagResourceRequest;
 import com.amazonaws.services.stepfunctions.model.UntagResourceRequest;
@@ -9,6 +10,7 @@ import com.google.common.collect.Sets;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,7 +46,12 @@ public class TaggingHelper {
         ListTagsForResourceRequest listTagsForResourceRequest = new ListTagsForResourceRequest();
         listTagsForResourceRequest.setResourceArn(resourceArn);
 
-        return proxy.injectCredentialsAndInvoke(listTagsForResourceRequest, client::listTagsForResource).getTags();
+        ListTagsForResourceResult listTagsForResourceResult = proxy.injectCredentialsAndInvoke(listTagsForResourceRequest, client::listTagsForResource);
+        if (listTagsForResourceResult.getTags() != null) {
+            return listTagsForResourceResult.getTags();
+        }
+
+        return new ArrayList<>();
     }
 
     public static void addTags(String resourceArn,
