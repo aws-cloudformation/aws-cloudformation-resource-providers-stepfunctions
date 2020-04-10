@@ -189,6 +189,7 @@
                 "states:UpdateStateMachine",
                 "states:TagResource",
                 "states:UntagResource",
+                "states:ListTagsForResource",
                 "iam:PassRole"
             ]
         },
