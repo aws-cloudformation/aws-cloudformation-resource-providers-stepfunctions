@@ -88,7 +88,7 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
         return StringUtils.replaceEachRepeatedly(definitionString, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
     }
 
-    protected String fetchS3Definition(DefinitionS3 definitionS3, AmazonWebServicesClientProxy proxy) {
+    protected String fetchS3Definition(S3Location definitionS3, AmazonWebServicesClientProxy proxy) {
         AmazonS3 s3Client = ClientBuilder.getS3Client();
         GetObjectRequest getObjectRequest = new GetObjectRequest(definitionS3.getBucket(), definitionS3.getKey());
         if (definitionS3.getVersion() != null && !definitionS3.getVersion().isEmpty()) {

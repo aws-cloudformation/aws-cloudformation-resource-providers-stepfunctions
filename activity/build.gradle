@@ -68,6 +68,13 @@ task cfnPackage(type: Exec) {
 task rpdkPackage(type: Zip) {
     dependsOn cfnPackage
     from zipTree("${resource_name_with_dashes}.zip")
+    // Inject internal files
+    from (rootDir) {
+        include "settings.internal.json"
+    }
+    from ("${rootDir}/activity") {
+        include "canary-bundle/**/*"
+    }
     destinationDir = file('./build/rpdk')
     archiveName("${resource_name_with_dashes}.zip")
 }

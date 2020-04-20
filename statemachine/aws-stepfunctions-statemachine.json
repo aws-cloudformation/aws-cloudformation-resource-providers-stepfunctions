@@ -70,7 +70,7 @@
                 }
             }
         },
-        "DefinitionS3": {
+        "S3Location": {
             "type": "object",
             "properties": {
                 "Bucket": {
@@ -93,7 +93,7 @@
                 "Bucket", "Key"
             ]
         },
-        "ResourceMappings": {
+        "DefinitionSubstitutions": {
             "type": "object",
             "patternProperties": {
                 "^[A-Za-z0-9]{1,64}$": {
@@ -143,11 +143,11 @@
         "TracingConfiguration": {
             "$ref": "#/definitions/TracingConfiguration"
         },
-        "DefinitionS3": {
-            "$ref": "#/definitions/DefinitionS3"
+        "DefinitionS3Location": {
+            "$ref": "#/definitions/S3Location"
         },
-        "ResourceMappings": {
-            "$ref": "#/definitions/ResourceMappings"
+        "DefinitionSubstitutions": {
+            "$ref": "#/definitions/DefinitionSubstitutions"
         },
         "Tags": {
             "type": "array",

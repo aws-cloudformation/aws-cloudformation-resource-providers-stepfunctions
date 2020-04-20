@@ -1,0 +1,7 @@
+{
+  "FasPolicyPath": {
+    "aws": "/policies/AuthRuntime/authNPolicy/cloudformation/states.2020-04-08-17-15-55",
+    "aws-cn": "/policies/AuthRuntime/authNPolicy/cloudformation/states.2020-04-08-17-20-35-BJS",
+    "aws-us-gov": "/policies/AuthRuntime/authNPolicy/cloudformation/states.2020-04-08-17-22-55-PDT"
+  }
+}

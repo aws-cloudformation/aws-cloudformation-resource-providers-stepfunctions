@@ -117,7 +117,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionS3(new DefinitionS3("Bucket", "Key", "1"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("{}"));

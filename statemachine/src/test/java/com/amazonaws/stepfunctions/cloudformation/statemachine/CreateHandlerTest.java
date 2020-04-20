@@ -109,7 +109,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         resourceMappings.put("lambdaArn01", "lambdaArn01");
         resourceMappings.put("lambdaArn02", "lambdaArn02");
 
-        request.getDesiredResourceState().setResourceMappings(resourceMappings);
+        request.getDesiredResourceState().setDefinitionSubstitutions(resourceMappings);
         request.getDesiredResourceState().setDefinitionString(definition);
 
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
@@ -128,7 +128,7 @@ public class CreateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionS3(new DefinitionS3("Bucket", "Key", "1"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("{}"));
@@ -164,7 +164,7 @@ public class CreateHandlerTest extends HandlerTestBase {
     @Test
     public void testWithoutDefinition() {
         request.getDesiredResourceState().setDefinitionString(null);
-        request.getDesiredResourceState().setDefinitionS3(null);
+        request.getDesiredResourceState().setDefinitionS3Location(null);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
