@@ -5,9 +5,15 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.stepfunctions.cloudformation.statemachine.s3.GetObjectFunction;
 import com.amazonaws.stepfunctions.cloudformation.statemachine.s3.GetObjectResult;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.cloudformation.exceptions.BaseHandlerException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.TerminalException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
@@ -24,6 +30,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
+
+    private static final ObjectMapper jsonMapper = new ObjectMapper();
+    private static final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+
+    static {
+        jsonMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+        yamlMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+    }
 
     /**
      * Generic strategy to handle errors.
@@ -88,19 +102,63 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
         return StringUtils.replaceEachRepeatedly(definitionString, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
     }
 
-    protected String fetchS3Definition(S3Location definitionS3, AmazonWebServicesClientProxy proxy) {
+    protected String convertDefinitionObject(Map<String, Object> definitionObject) {
+        try {
+            return jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(definitionObject);
+        } catch (JsonProcessingException e) {
+            throw new CfnInvalidRequestException("Invalid JSON: " + e.getMessage());
+        }
+    }
+
+    protected String fetchS3Definition(S3Location s3Location, AmazonWebServicesClientProxy proxy) {
         AmazonS3 s3Client = ClientBuilder.getS3Client();
-        GetObjectRequest getObjectRequest = new GetObjectRequest(definitionS3.getBucket(), definitionS3.getKey());
-        if (definitionS3.getVersion() != null && !definitionS3.getVersion().isEmpty()) {
-            getObjectRequest.setVersionId(definitionS3.getVersion());
+        GetObjectRequest getObjectRequest = new GetObjectRequest(s3Location.getBucket(), s3Location.getKey());
+        if (s3Location.getVersion() != null && !s3Location.getVersion().isEmpty()) {
+            getObjectRequest.setVersionId(s3Location.getVersion());
         }
 
         GetObjectResult getObjectResult = proxy.injectCredentialsAndInvoke(getObjectRequest, new GetObjectFunction(s3Client)::get);
+        if (getObjectResult.getS3Object().getObjectMetadata().getContentLength() > Constants.MAX_DEFINITION_SIZE) {
+            throw new CfnInvalidRequestException(Constants.DEFINITION_SIZE_LIMIT_ERROR_MESSAGE);
+        }
+
+        String definition;
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(getObjectResult.getS3Object().getObjectContent()))) {
-            return reader.lines().collect(Collectors.joining("\n"));
+            definition = reader.lines().collect(Collectors.joining("\n"));
         } catch (IOException e) {
             throw new CfnInternalFailureException(e);
+        }
+
+        if ("YAML".equals(s3Location.getFormat())) {
+            try {
+                JsonNode root = yamlMapper.readTree(definition);
+                definition = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
+            } catch (JsonProcessingException e) {
+                throw new CfnInvalidRequestException("Invalid YAML: " + e.getMessage());
+            }
+        } else {
+            try {
+                jsonMapper.readTree(definition);
+            } catch (JsonProcessingException e) {
+                throw new CfnInvalidRequestException("Invalid JSON: " + e.getMessage());
+            }
+        }
+
+        return definition;
+    }
+
+    protected void processDefinition(AmazonWebServicesClientProxy proxy, ResourceModel model) {
+        if (model.getDefinitionS3Location() != null) {
+            model.setDefinitionString(fetchS3Definition(model.getDefinitionS3Location(), proxy));
+        }
+
+        if (model.getDefinition() != null) {
+            model.setDefinitionString(convertDefinitionObject(model.getDefinition()));
+        }
+
+        if (model.getDefinitionSubstitutions() != null) {
+            model.setDefinitionString(transformDefinition(model.getDefinitionString(), model.getDefinitionSubstitutions()));
         }
     }
 

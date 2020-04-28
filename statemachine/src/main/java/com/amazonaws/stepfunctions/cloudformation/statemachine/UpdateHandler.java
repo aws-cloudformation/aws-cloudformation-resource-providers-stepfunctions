@@ -32,18 +32,7 @@ public class UpdateHandler extends ResourceHandler {
         try {
             AWSStepFunctions sfnClient = AWSStepFunctionsClientBuilder.defaultClient();
 
-            // Fetch S3 definition and apply resource mappings.
-            if (model.getDefinitionS3Location() == null && model.getDefinitionString() == null) {
-                throw new CfnInvalidRequestException(Constants.DEFINITION_MISSING_ERROR_MESSAGE);
-            }
-
-            if (model.getDefinitionS3Location() != null) {
-                model.setDefinitionString(fetchS3Definition(model.getDefinitionS3Location(), proxy));
-            }
-
-            if (model.getDefinitionSubstitutions() != null) {
-                model.setDefinitionString(transformDefinition(model.getDefinitionString(), model.getDefinitionSubstitutions()));
-            }
+            processDefinition(proxy, model);
 
             UpdateStateMachineRequest updateStateMachineRequest = new UpdateStateMachineRequest();
             updateStateMachineRequest.setStateMachineArn(model.getId());

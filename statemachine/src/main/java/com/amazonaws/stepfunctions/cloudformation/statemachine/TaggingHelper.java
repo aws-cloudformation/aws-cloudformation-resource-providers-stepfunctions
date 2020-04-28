@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public class TaggingHelper {
 
     public static List<Tag> consolidateTags(ResourceHandlerRequest<ResourceModel> request) {
+        Map<String, String> systemTags = request.getSystemTags();
         List<TagsEntry> customerTags = request.getDesiredResourceState().getTags();
         Map<String, String> resourceTags = request.getDesiredResourceTags();
 
@@ -29,6 +30,10 @@ public class TaggingHelper {
 
         if (resourceTags != null) {
             tags.putAll(resourceTags);
+        }
+
+        if (systemTags != null) {
+            tags.putAll(systemTags);
         }
 
         if (customerTags != null) {

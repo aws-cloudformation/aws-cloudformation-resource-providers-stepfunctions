@@ -8,6 +8,8 @@ import com.amazonaws.services.stepfunctions.model.CreateStateMachineResult;
 import com.amazonaws.stepfunctions.cloudformation.statemachine.s3.GetObjectFunction;
 import com.amazonaws.stepfunctions.cloudformation.statemachine.s3.GetObjectResult;
 import com.amazonaws.util.StringInputStream;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +27,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest extends HandlerTestBase {
+
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+    static {
+        mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+    }
 
     private CreateHandler handler = new CreateHandler();
 
@@ -105,11 +113,11 @@ public class CreateHandlerTest extends HandlerTestBase {
                 "  }\n" +
                 "}";
 
-        Map<String, String> resourceMappings = new HashMap<>();
-        resourceMappings.put("lambdaArn01", "lambdaArn01");
-        resourceMappings.put("lambdaArn02", "lambdaArn02");
+        Map<String, String> substitutions = new HashMap<>();
+        substitutions.put("lambdaArn01", "lambdaArn01");
+        substitutions.put("lambdaArn02", "lambdaArn02");
 
-        request.getDesiredResourceState().setDefinitionSubstitutions(resourceMappings);
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
         request.getDesiredResourceState().setDefinitionString(definition);
 
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
@@ -127,8 +135,36 @@ public class CreateHandlerTest extends HandlerTestBase {
     }
 
     @Test
+    public void testDefinitionObject() {
+        Map<String, Object> definition = new HashMap<>();
+        Map<String, Object> lambdaState = new HashMap<>();
+        lambdaState.put("Resource", "${lambdaArn01}");
+        Map<String, Map<String, Object>> states = new HashMap<>();
+        states.put("lambda_01", lambdaState);
+        definition.put("States", states);
+
+        Map<String, String> substitutions = new HashMap<>();
+        substitutions.put("lambdaArn01", "lambdaArn01");
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinition(definition);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        String transformedDefinition = response.getResourceModel().getDefinitionString();
+
+        assertThat(!transformedDefinition.contains("${lambdaArn01}")).isTrue();
+    }
+
+    @Test
     public void testDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1", "JSON"));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("{}"));
@@ -145,6 +181,71 @@ public class CreateHandlerTest extends HandlerTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getResourceModel().getDefinitionString()).isEqualTo("{}");
+    }
+
+    @Test
+    public void testDefinitionFromS3InYAML() throws Exception {
+        String formattedJson = "{\n" +
+                "  \"Comment\" : \"Hello World\"\n" +
+                "}";
+
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1", "YAML"));
+
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectContent(new StringInputStream("Comment: Hello World"));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getDefinitionString()).isEqualTo(formattedJson);
+    }
+
+    @Test
+    public void testInvalidYamlDefinitionFromS3() throws Exception {
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1", "YAML"));
+
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectContent(new StringInputStream("Invalid: -"));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+    }
+
+    @Test
+    public void testInvalidJsonDefinitionFromS3() throws Exception {
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1", "JSON"));
+
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectContent(new StringInputStream("Invalid: -"));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
     }
 
     @Test

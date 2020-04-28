@@ -87,10 +87,17 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 80
+                },
+                "Format": {
+                    "type": "string",
+                    "enum" : [
+                        "JSON",
+                        "YAML"
+                    ]
                 }
             },
             "required": [
-                "Bucket", "Key"
+                "Bucket", "Key", "Format"
             ]
         },
         "DefinitionSubstitutions": {
@@ -101,6 +108,10 @@
                 }
             },
             "additionalProperties": false,
+            "minProperties": 1
+        },
+        "Definition": {
+            "type": "object",
             "minProperties": 1
         }
     },
@@ -149,6 +160,9 @@
         "DefinitionSubstitutions": {
             "$ref": "#/definitions/DefinitionSubstitutions"
         },
+        "Definition": {
+            "$ref": "#/definitions/Definition"
+        },
         "Tags": {
             "type": "array",
             "uniqueItems" : false,
@@ -157,10 +171,12 @@
             }
         }
     },
-    "additionalProperties": false,
-    "required": [
-        "RoleArn"
+    "oneOf": [
+        { "required":  ["Definition", "RoleArn"] },
+        { "required":  ["DefinitionS3Location", "RoleArn"] },
+        { "required":  ["DefinitionString", "RoleArn"] }
     ],
+    "additionalProperties": false,
     "readOnlyProperties": [
         "/properties/Name",
         "/properties/Id"
