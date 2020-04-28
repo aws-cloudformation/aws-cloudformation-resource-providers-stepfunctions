@@ -1,10 +1,15 @@
-plugins {
-    id 'java'
-
-    // To build a shadow jar of this resource provider
-    id 'com.github.johnrengelman.shadow' version '4.0.2'
+buildscript {
+    dependencies {
+        classpath brazilGradle.tool('BrazilGradleQualityDefaults')
+    }
 }
 
+plugins {
+    id 'brazil-quality-defaults'
+    id "java"
+    id "jacoco"
+    id 'com.github.johnrengelman.shadow'
+}
 
 def resource_name_with_dashes = 'aws-stepfunctions-statemachine'
 def schema_file = "${resource_name_with_dashes}.json"
@@ -27,13 +32,15 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    environment 'AWS_REGION', 'us-east-1'
+    environment 'AWS_REGION', 'us-west-2'
 }
+
+def cfn_command = "${brazilGradle.path('[AWSCloudFormationRPDKJavaPluginTool]all.runtimefarm')}/bin/cfn"
 
 // Generate RPDK wrapper source before compile
 task rpdkGenerateSource(type: Exec) {
     workingDir '.'
-    executable = "${brazilGradle.path('tool.runtimefarm')}/bin/cfn"
+    executable = cfn_command
     args = ['generate']
 }
 
@@ -60,7 +67,7 @@ shadowJar {
 task cfnPackage(type: Exec) {
     dependsOn shadowJar
     workingDir '.'
-    executable = "${brazilGradle.path('tool.runtimefarm')}/bin/cfn"
+    executable = cfn_command
     args = ['submit', '--dry-run']
 }
 

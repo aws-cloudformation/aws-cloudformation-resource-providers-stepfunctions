@@ -19,6 +19,8 @@ package.AWSCloudFormationResourceProvidersStepFunctions = {
             BrazilPath = 1.1;
             JDK8 = 1.0;
             UluruBuild = 1.0;
+            BrazilGradleQualityDefaults = 4.x;
+            GradleShadow = 4.x;
         };
     };
 
@@ -31,6 +33,7 @@ package.AWSCloudFormationResourceProvidersStepFunctions = {
             AWSCloudFormationRPDKJavaPlugin = 1.1;
             AWSStepFunctionsJavaClient = 1.11.x;
             AWSS3JavaClient = 1.11.x;
+            Jackson-dataformat-yaml = 2.10.x;
         };
     };
 
@@ -40,6 +43,14 @@ package.AWSCloudFormationResourceProvidersStepFunctions = {
             JUnit5 = 5.x;
             Mockito = 2.22.x;
             Mockito-junit-jupiter = 2.22.x;
+        };
+    };
+
+    resolves-conflict-dependencies = {
+        1.0 = {
+            Jackson-annotations = 2.10.x;
+            Jackson-core = 2.10.x;
+            Jackson-databind = 2.10.x;
         };
     };
 
