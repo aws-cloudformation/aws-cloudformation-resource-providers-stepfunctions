@@ -87,17 +87,10 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 80
-                },
-                "Format": {
-                    "type": "string",
-                    "enum" : [
-                        "JSON",
-                        "YAML"
-                    ]
                 }
             },
             "required": [
-                "Bucket", "Key", "Format"
+                "Bucket", "Key"
             ]
         },
         "DefinitionSubstitutions": {
@@ -116,7 +109,7 @@
         }
     },
     "properties": {
-        "Id": {
+        "Arn": {
             "type": "string",
             "minLength": 1,
             "maxLength": 2048
@@ -178,14 +171,14 @@
     ],
     "additionalProperties": false,
     "readOnlyProperties": [
-        "/properties/Name",
-        "/properties/Id"
+        "/properties/Arn",
+        "/properties/Name"
     ],
     "createOnlyProperties": [
         "/properties/StateMachineName"
     ],
     "primaryIdentifier": [
-        "/properties/Id"
+        "/properties/Arn"
     ],
     "handlers": {
         "create": {

@@ -25,7 +25,7 @@ public class DeleteHandler extends ResourceHandler {
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
             DeleteStateMachineRequest deleteStateMachineRequest = new DeleteStateMachineRequest();
-            deleteStateMachineRequest.setStateMachineArn(model.getId());
+            deleteStateMachineRequest.setStateMachineArn(model.getArn());
 
             proxy.injectCredentialsAndInvoke(deleteStateMachineRequest, sfnClient::deleteStateMachine);
 

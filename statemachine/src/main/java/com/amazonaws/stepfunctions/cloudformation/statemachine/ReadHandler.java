@@ -26,7 +26,7 @@ public class ReadHandler extends ResourceHandler {
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
             DescribeStateMachineRequest describeStateMachineRequest = new DescribeStateMachineRequest();
-            describeStateMachineRequest.setStateMachineArn(model.getId());
+            describeStateMachineRequest.setStateMachineArn(model.getArn());
 
             DescribeStateMachineResult describeStateMachineResult = proxy.injectCredentialsAndInvoke(describeStateMachineRequest, sfnClient::describeStateMachine);
             model.setName(describeStateMachineResult.getName());

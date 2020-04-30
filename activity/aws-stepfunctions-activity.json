@@ -47,9 +47,6 @@
     "required": [
         "Name"
     ],
-    "createOnlyProperties": [
-        "/properties/Name"
-    ],
     "primaryIdentifier": [
         "/properties/Arn"
     ],

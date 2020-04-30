@@ -44,7 +44,7 @@ public class CreateHandlerTest extends HandlerTestBase {
                 .region(REGION)
                 .awsAccountId(AWS_ACCOUNT_ID)
                 .desiredResourceState(ResourceModel.builder()
-                        .id(STATE_MACHINE_ARN)
+                        .arn(STATE_MACHINE_ARN)
                         .roleArn(ROLE_ARN)
                         .definitionString("{}")
                         .stateMachineType(STANDARD_STATE_MACHINE_TYPE)
@@ -80,7 +80,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-        assertThat(response.getResourceModel().getId()).isEqualTo(STATE_MACHINE_ARN);
+        assertThat(response.getResourceModel().getArn()).isEqualTo(STATE_MACHINE_ARN);
     }
 
     @Test
@@ -164,7 +164,7 @@ public class CreateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1", "JSON"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("{}"));
@@ -189,7 +189,7 @@ public class CreateHandlerTest extends HandlerTestBase {
                 "  \"Comment\" : \"Hello World\"\n" +
                 "}";
 
-        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1", "YAML"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("Comment: Hello World"));
@@ -210,7 +210,7 @@ public class CreateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testInvalidYamlDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1", "YAML"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("Invalid: -"));
@@ -230,7 +230,7 @@ public class CreateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testInvalidJsonDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1", "JSON"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("Invalid: -"));

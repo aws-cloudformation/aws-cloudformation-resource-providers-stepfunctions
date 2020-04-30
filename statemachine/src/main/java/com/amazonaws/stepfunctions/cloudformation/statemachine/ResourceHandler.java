@@ -130,18 +130,15 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
             throw new CfnInternalFailureException(e);
         }
 
-        if ("YAML".equals(s3Location.getFormat())) {
+        // Parse JSON format first, then YAML.
+        try {
+            jsonMapper.readTree(definition);
+        } catch (IOException jsonException) {
             try {
                 JsonNode root = yamlMapper.readTree(definition);
                 definition = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
-            } catch (JsonProcessingException e) {
-                throw new CfnInvalidRequestException("Invalid YAML: " + e.getMessage());
-            }
-        } else {
-            try {
-                jsonMapper.readTree(definition);
-            } catch (JsonProcessingException e) {
-                throw new CfnInvalidRequestException("Invalid JSON: " + e.getMessage());
+            } catch (IOException yamlException) {
+                throw new TerminalException("Invalid StateMachine definition file.");
             }
         }
 

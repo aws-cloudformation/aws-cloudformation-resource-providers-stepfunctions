@@ -24,7 +24,7 @@ public class ReadHandlerTest extends HandlerTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .region(REGION)
                 .awsAccountId(AWS_ACCOUNT_ID)
-                .desiredResourceState(ResourceModel.builder().id(STATE_MACHINE_ARN).build())
+                .desiredResourceState(ResourceModel.builder().arn(STATE_MACHINE_ARN).build())
                 .build();
     }
 

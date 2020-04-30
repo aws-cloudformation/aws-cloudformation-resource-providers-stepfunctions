@@ -4,7 +4,6 @@ import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineRequest;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineResult;
 import com.amazonaws.services.stepfunctions.model.Tag;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -53,7 +52,7 @@ public class CreateHandler extends ResourceHandler {
             }
 
             CreateStateMachineResult createStateMachineResult = proxy.injectCredentialsAndInvoke(createStateMachineRequest, sfnClient::createStateMachine);
-            model.setId(createStateMachineResult.getStateMachineArn());
+            model.setArn(createStateMachineResult.getStateMachineArn());
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)

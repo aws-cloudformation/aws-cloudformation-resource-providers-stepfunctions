@@ -39,7 +39,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .region(REGION)
                 .awsAccountId(AWS_ACCOUNT_ID)
-                .desiredResourceState(ResourceModel.builder().id(STATE_MACHINE_ARN).roleArn(ROLE_ARN).definitionString("{}").build())
+                .desiredResourceState(ResourceModel.builder().arn(STATE_MACHINE_ARN).roleArn(ROLE_ARN).definitionString("{}").build())
                 .build();
     }
 
@@ -117,7 +117,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1", "JSON"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("{}"));

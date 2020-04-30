@@ -5,7 +5,6 @@ import com.amazonaws.services.stepfunctions.AWSStepFunctionsClientBuilder;
 import com.amazonaws.services.stepfunctions.model.Tag;
 import com.amazonaws.services.stepfunctions.model.UpdateStateMachineRequest;
 import com.google.common.collect.Sets;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -35,7 +34,7 @@ public class UpdateHandler extends ResourceHandler {
             processDefinition(proxy, model);
 
             UpdateStateMachineRequest updateStateMachineRequest = new UpdateStateMachineRequest();
-            updateStateMachineRequest.setStateMachineArn(model.getId());
+            updateStateMachineRequest.setStateMachineArn(model.getArn());
             updateStateMachineRequest.setRoleArn(model.getRoleArn());
             updateStateMachineRequest.setDefinition(model.getDefinitionString());
 
@@ -58,7 +57,7 @@ public class UpdateHandler extends ResourceHandler {
     }
 
     private void updateTags(ResourceHandlerRequest<ResourceModel> request, AmazonWebServicesClientProxy proxy, AWSStepFunctions sfnClient) {
-        String stateMachineArn = request.getDesiredResourceState().getId();
+        String stateMachineArn = request.getDesiredResourceState().getArn();
 
         List<Tag> previousUserTags = TaggingHelper.listTagsForResource(stateMachineArn, proxy, sfnClient);
 
