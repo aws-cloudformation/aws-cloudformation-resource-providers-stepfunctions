@@ -1,0 +1,16 @@
+---
+  AWSTemplateFormatVersion: "2010-09-09"
+  Description: "This template will create a simple state machine that contains one activity task state."
+  Resources:
+    MyActivity:
+      Type: "AWS::StepFunctions::Activity"
+      Properties:
+        Name: "myActivityWithinStateMachine"
+    MyStateMachine:
+      Type: "AWS::StepFunctions::StateMachine"
+      Properties:
+        DefinitionString:
+          !Sub
+            - "{\"StartAt\": \"HelloWorld\",  \"States\": {\"HelloWorld\": {\"Type\": \"Task\", \"Resource\": \"${activityArn}\", \"End\": true}}}"
+            - {activityArn: !Ref MyActivity}
+        RoleArn: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/doesNotExist"
