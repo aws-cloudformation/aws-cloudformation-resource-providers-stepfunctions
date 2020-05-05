@@ -25,7 +25,7 @@ public class DeleteHandler extends ResourceHandler {
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
             DeleteActivityRequest deleteActivityRequest = new DeleteActivityRequest();
-            deleteActivityRequest.setActivityArn(model.getId());
+            deleteActivityRequest.setActivityArn(model.getArn());
 
             proxy.injectCredentialsAndInvoke(deleteActivityRequest, sfnClient::deleteActivity);
 

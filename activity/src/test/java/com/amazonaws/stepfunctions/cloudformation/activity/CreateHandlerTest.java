@@ -52,7 +52,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-        assertThat(response.getResourceModel().getId()).isEqualTo(ACTIVITY_ARN);
+        assertThat(response.getResourceModel().getArn()).isEqualTo(ACTIVITY_ARN);
         assertThat(response.getResourceModel().getName()).isEqualTo(ACTIVITY_NAME);
     }
 

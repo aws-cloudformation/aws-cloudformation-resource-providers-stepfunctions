@@ -24,7 +24,7 @@ public class ReadHandlerTest extends HandlerTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .region(REGION)
                 .awsAccountId(AWS_ACCOUNT_ID)
-                .desiredResourceState(ResourceModel.builder().id(ACTIVITY_ARN).name(ACTIVITY_NAME).build())
+                .desiredResourceState(ResourceModel.builder().arn(ACTIVITY_ARN).name(ACTIVITY_NAME).build())
                 .build();
     }
 
@@ -47,7 +47,7 @@ public class ReadHandlerTest extends HandlerTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-        assertThat(response.getResourceModel().getId()).isEqualTo(ACTIVITY_ARN);
+        assertThat(response.getResourceModel().getArn()).isEqualTo(ACTIVITY_ARN);
         assertThat(response.getResourceModel().getName()).isEqualTo(ACTIVITY_NAME);
     }
 

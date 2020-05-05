@@ -35,7 +35,7 @@ public class CreateHandler extends ResourceHandler {
                     .withTags(tags);
 
             CreateActivityResult createActivityResult = proxy.injectCredentialsAndInvoke(createActivityRequest, sfnClient::createActivity);
-            model.setId(createActivityResult.getActivityArn());
+            model.setArn(createActivityResult.getActivityArn());
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)

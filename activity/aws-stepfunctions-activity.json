@@ -25,7 +25,7 @@
         }
     },
     "properties": {
-        "Id": {
+        "Arn": {
             "type": "string",
             "minLength": 1,
             "maxLength": 2048
@@ -51,10 +51,9 @@
         "/properties/Name"
     ],
     "primaryIdentifier": [
-        "/properties/Id"
+        "/properties/Arn"
     ],
     "readOnlyProperties": [
-        "/properties/Id",
         "/properties/Name"
     ],
     "handlers": {
