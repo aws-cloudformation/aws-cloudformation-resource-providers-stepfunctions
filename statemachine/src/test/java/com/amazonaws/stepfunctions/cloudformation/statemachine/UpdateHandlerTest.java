@@ -31,6 +31,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class UpdateHandlerTest extends HandlerTestBase {
 
     private UpdateHandler handler = new UpdateHandler();
+    public static final String DEFAULT_S3_BUCKET = "Bucket";
+    public static final String DEFAULT_S3_KEY = "Key";
+    public static final String DEFAULT_S3_OBJECT_VERSION = "1";
 
     private ResourceHandlerRequest<ResourceModel> request;
 
@@ -117,7 +120,8 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
+        request.getDesiredResourceState().setDefinitionString(null);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("{}"));

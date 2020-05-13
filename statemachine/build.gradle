@@ -76,9 +76,9 @@ task rpdkPackage(type: Zip) {
     dependsOn cfnPackage
     from zipTree("${resource_name_with_dashes}.zip")
     // Inject internal files
-    // from (rootDir) {
-    //     include "settings.internal.json"
-    // }
+    from (rootDir) {
+        include "settings.internal.json"
+    }
     from ("${rootDir}/statemachine") {
         include "canary-bundle/**/*"
     }

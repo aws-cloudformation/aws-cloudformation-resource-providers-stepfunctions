@@ -29,6 +29,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CreateHandlerTest extends HandlerTestBase {
 
     private static final ObjectMapper mapper = new ObjectMapper();
+    public static final String DEFAULT_S3_BUCKET = "Bucket";
+    public static final String DEFAULT_S3_KEY = "Key";
+    public static final String DEFAULT_S3_OBJECT_VERSION = "1";
 
     static {
         mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
@@ -46,7 +49,6 @@ public class CreateHandlerTest extends HandlerTestBase {
                 .desiredResourceState(ResourceModel.builder()
                         .arn(STATE_MACHINE_ARN)
                         .roleArn(ROLE_ARN)
-                        .definitionString("{}")
                         .stateMachineType(STANDARD_STATE_MACHINE_TYPE)
                         .stateMachineName(STATE_MACHINE_NAME)
                         .loggingConfiguration(createLoggingConfiguration())
@@ -56,6 +58,8 @@ public class CreateHandlerTest extends HandlerTestBase {
 
     @Test
     public void handleSuccess() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+
         CreateStateMachineRequest createStateMachineRequest = new CreateStateMachineRequest();
         createStateMachineRequest.setName(STATE_MACHINE_NAME);
         createStateMachineRequest.setType(STANDARD_STATE_MACHINE_TYPE);
@@ -85,6 +89,8 @@ public class CreateHandlerTest extends HandlerTestBase {
 
     @Test
     public void test500() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenThrow(exception500);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
@@ -164,7 +170,7 @@ public class CreateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("{}"));
@@ -189,7 +195,7 @@ public class CreateHandlerTest extends HandlerTestBase {
                 "  \"Comment\" : \"Hello World\"\n" +
                 "}";
 
-        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("Comment: Hello World"));
@@ -210,7 +216,7 @@ public class CreateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testInvalidYamlDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("Invalid: -"));
@@ -230,7 +236,7 @@ public class CreateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testInvalidJsonDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionS3Location(new S3Location("Bucket", "Key", "1"));
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("Invalid: -"));
@@ -272,6 +278,20 @@ public class CreateHandlerTest extends HandlerTestBase {
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_MISSING_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testWithMoreThanOneDefinitions() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_REDUNDANT_ERROR_MESSAGE);
     }
 
 }

@@ -10,4 +10,7 @@ public class Constants {
             "Neither the global service principal states.amazonaws.com, nor the regional one is authorized to assume the provided role";
     public static final Integer MAX_DEFINITION_SIZE = 1048576;
     public static final String DEFINITION_SIZE_LIMIT_ERROR_MESSAGE = "State Machine definition file cannot exceed 1MB.";
+    public static final String DEFINITION_INVALID_FORMAT_ERROR_MESSAGE = "Invalid StateMachine definition file.";
+    public static final String DEFINITION_MISSING_ERROR_MESSAGE = "Property validation failed. Required key [DefinitionS3Location], [Definition] or [DefinitionString] not found.";
+    public static final String DEFINITION_REDUNDANT_ERROR_MESSAGE = "Property validation failed. Please use either [DefinitionS3Location], [Definition] or [DefinitionString] but not both.";
 }

@@ -53,6 +53,7 @@ public class CreateHandler extends ResourceHandler {
 
             CreateStateMachineResult createStateMachineResult = proxy.injectCredentialsAndInvoke(createStateMachineRequest, sfnClient::createStateMachine);
             model.setArn(createStateMachineResult.getStateMachineArn());
+            model.setName(model.getStateMachineName());
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)

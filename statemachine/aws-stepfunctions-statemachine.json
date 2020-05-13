@@ -74,19 +74,13 @@
             "type": "object",
             "properties": {
                 "Bucket": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 63
+                    "type": "string"
                 },
                 "Key": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 1024
+                    "type": "string"
                 },
                 "Version": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 80
+                    "type": "string"
                 }
             },
             "required": [
@@ -96,11 +90,10 @@
         "DefinitionSubstitutions": {
             "type": "object",
             "patternProperties": {
-                "^[A-Za-z0-9]{1,64}$": {
+                ".*": {
                     "type": "string"
                 }
             },
-            "additionalProperties": false,
             "minProperties": 1
         },
         "Definition": {
@@ -164,10 +157,8 @@
             }
         }
     },
-    "oneOf": [
-        { "required":  ["Definition", "RoleArn"] },
-        { "required":  ["DefinitionS3Location", "RoleArn"] },
-        { "required":  ["DefinitionString", "RoleArn"] }
+    "required": [
+        "RoleArn"
     ],
     "additionalProperties": false,
     "readOnlyProperties": [

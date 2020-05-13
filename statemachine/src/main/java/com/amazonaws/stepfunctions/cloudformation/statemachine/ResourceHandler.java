@@ -138,7 +138,7 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
                 JsonNode root = yamlMapper.readTree(definition);
                 definition = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
             } catch (IOException yamlException) {
-                throw new TerminalException("Invalid StateMachine definition file.");
+                throw new TerminalException(Constants.DEFINITION_INVALID_FORMAT_ERROR_MESSAGE);
             }
         }
 
@@ -146,6 +146,28 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
     }
 
     protected void processDefinition(AmazonWebServicesClientProxy proxy, ResourceModel model) {
+        // Validate that only one Definition is present
+        List<Object> definitions = new ArrayList<>();
+        if (model.getDefinition() != null) {
+            definitions.add(model.getDefinition());
+        }
+
+        if (model.getDefinitionString() != null) {
+            definitions.add(model.getDefinitionString());
+        }
+
+        if (model.getDefinitionS3Location() != null) {
+            definitions.add(model.getDefinitionS3Location());
+        }
+
+        if (definitions.isEmpty()) {
+            throw new TerminalException(Constants.DEFINITION_MISSING_ERROR_MESSAGE);
+        }
+
+        if (definitions.size() > 1) {
+            throw new TerminalException(Constants.DEFINITION_REDUNDANT_ERROR_MESSAGE);
+        }
+
         if (model.getDefinitionS3Location() != null) {
             model.setDefinitionString(fetchS3Definition(model.getDefinitionS3Location(), proxy));
         }
