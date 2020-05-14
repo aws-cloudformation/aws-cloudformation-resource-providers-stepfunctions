@@ -5,11 +5,6 @@ package.AWSCloudFormationResourceProvidersStepFunctions = {
         generic = true;
     };
 
-    build-environment = {
-        chroot = basic;
-        network-access = open; # TODO: Remove when CFN validates tokens w/o network access
-    };
-    
     build-system = copy-and-brazil-gradle;
     build-tools = {
         1.0 = {
