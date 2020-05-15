@@ -1,9 +1,8 @@
----
-  AWSTemplateFormatVersion: "2010-09-09"
-  Description: "This template will create a simple state machine that contains one pass state."
-  Resources:
-    MyStateMachine:
-      Type: "AWS::StepFunctions::StateMachine"
-      Properties:
-        DefinitionString: "{\"StartAt\": \"HelloWorld\",  \"States\": {\"HelloWorld\": {\"Type\": \"Pass\", \"Result\": 1, \"End\": true}}}"
-        RoleArn: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/doesNotExist"
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "This template will create a simple state machine that contains one pass state."
+Resources:
+  MyStateMachine:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      DefinitionString: "{\"StartAt\": \"HelloWorld\",  \"States\": {\"HelloWorld\": {\"Type\": \"Pass\", \"Result\": 1, \"End\": true}}}"
+      RoleArn: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/doesNotExist"

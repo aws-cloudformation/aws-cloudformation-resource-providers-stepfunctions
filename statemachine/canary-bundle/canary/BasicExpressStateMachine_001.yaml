@@ -1,16 +1,12 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "This template will create a simple state machine with tags."
+Description: "This template will create a simple express state machine."
 Resources:
-  MyStateMachineWithTagsCanary:
+  MyStateMachine:
     Type: "AWS::StepFunctions::StateMachine"
     Properties:
       DefinitionString: "{\"StartAt\": \"HelloWorld\",  \"States\": {\"HelloWorld\": {\"Type\": \"Pass\", \"Result\": 1, \"End\": true}}}"
       RoleArn: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/doesNotExist"
-      Tags:
-        - Key: Key1
-          Value: Value1
-        - Key: Key2
-          Value: Value2
+      StateMachineType: "EXPRESS"
 Outputs:
   StateMachineName:
-    Value: !GetAtt [ MyStateMachineWithTagsCanary, Name ]
+    Value: !GetAtt [ MyStateMachine, Name ]

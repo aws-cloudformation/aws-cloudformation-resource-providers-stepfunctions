@@ -1,0 +1,41 @@
+Resources:
+  ExpressCWLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      RetentionInDays: 30
+  ExpressCWLogRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: CWLogPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogDelivery"
+                  - "logs:GetLogDelivery"
+                  - "logs:UpdateLogDelivery"
+                  - "logs:DeleteLogDelivery"
+                  - "logs:ListLogDeliveries"
+                  - "logs:PutResourcePolicy"
+                  - "logs:DescribeResourcePolicies"
+                  - "logs:DescribeLogGroups"
+                Resource: "*"
+Outputs:
+  ExpressCWLogGroupArn:
+    Value: !GetAtt [ ExpressCWLogGroup, Arn]
+    Export:
+      Name: "StepFunctionsCanaries-ExpressCWLogGroupArn"
+  ExpressCWLogRoleArn:
+    Value: !GetAtt [ ExpressCWLogRole, Arn ]
+    Export:
+      Name: "StepFunctionsCanaries-ExpressCWLogRoleArn"

@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "This template will create an express state machine with logging."
+Resources:
+  MyStateMachine:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      DefinitionString: "{\"StartAt\": \"HelloWorld\",  \"States\": {\"HelloWorld\": {\"Type\": \"Pass\", \"Result\": 1, \"End\": true}}}"
+      RoleArn:
+        Fn::ImportValue: "StepFunctionsCanaries-ExpressCWLogRoleArn"
+      StateMachineType: "EXPRESS"
+      LoggingConfiguration:
+        Level: "ALL"
+        IncludeExecutionData: True
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn:
+                Fn::ImportValue: "StepFunctionsCanaries-ExpressCWLogGroupArn"
+
+Outputs:
+  StateMachineName:
+    Value: !GetAtt [ MyStateMachine, Name ]
