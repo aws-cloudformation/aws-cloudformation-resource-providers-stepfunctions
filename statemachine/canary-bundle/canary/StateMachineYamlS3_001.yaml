@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "This template will create a simple state machine from an S3 file."
+Resources:
+  MyStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionS3Location:
+        Bucket:
+          Fn::ImportValue: "StepFunctionsCanaries-S3BucketName"
+        Key: hello_world.yaml
+      DefinitionSubstitutions:
+        Text: HelloWorld
+      RoleArn: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/doesNotExist"
+
+Outputs:
+  StateMachineArn:
+    Value: !Ref MyStateMachine
+  StateMachineName:
+    Value: !GetAtt [ MyStateMachine, Name ]
