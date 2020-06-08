@@ -141,34 +141,6 @@ public class CreateHandlerTest extends HandlerTestBase {
     }
 
     @Test
-    public void testDefinitionObject() {
-        Map<String, Object> definition = new HashMap<>();
-        Map<String, Object> lambdaState = new HashMap<>();
-        lambdaState.put("Resource", "${lambdaArn01}");
-        Map<String, Map<String, Object>> states = new HashMap<>();
-        states.put("lambda_01", lambdaState);
-        definition.put("States", states);
-
-        Map<String, String> substitutions = new HashMap<>();
-        substitutions.put("lambdaArn01", "lambdaArn01");
-
-        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
-        request.getDesiredResourceState().setDefinition(definition);
-
-        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
-        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
-
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(createStateMachineResult);
-
-        ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, null, logger);
-
-        String transformedDefinition = response.getResourceModel().getDefinitionString();
-
-        assertThat(!transformedDefinition.contains("${lambdaArn01}")).isTrue();
-    }
-
-    @Test
     public void testDefinitionFromS3() throws Exception {
         request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
 

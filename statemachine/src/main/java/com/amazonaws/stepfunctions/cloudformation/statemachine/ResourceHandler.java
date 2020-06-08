@@ -148,9 +148,6 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
     protected void processDefinition(AmazonWebServicesClientProxy proxy, ResourceModel model) {
         // Validate that only one Definition is present
         List<Object> definitions = new ArrayList<>();
-        if (model.getDefinition() != null) {
-            definitions.add(model.getDefinition());
-        }
 
         if (model.getDefinitionString() != null) {
             definitions.add(model.getDefinitionString());
@@ -170,10 +167,6 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
 
         if (model.getDefinitionS3Location() != null) {
             model.setDefinitionString(fetchS3Definition(model.getDefinitionS3Location(), proxy));
-        }
-
-        if (model.getDefinition() != null) {
-            model.setDefinitionString(convertDefinitionObject(model.getDefinition()));
         }
 
         if (model.getDefinitionSubstitutions() != null) {
