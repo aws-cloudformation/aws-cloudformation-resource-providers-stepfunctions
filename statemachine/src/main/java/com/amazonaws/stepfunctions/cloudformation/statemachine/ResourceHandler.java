@@ -44,8 +44,7 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
      * https://w.amazon.com/bin/view/AWS21/Design/Uluru/HandlerContract/
      */
     protected ProgressEvent<ResourceModel, CallbackContext> handleDefaultError(ResourceHandlerRequest<ResourceModel> request, Exception e) {
-        ProgressEvent.ProgressEventBuilder<ResourceModel, CallbackContext> resultBuilder = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(request.getDesiredResourceState());
+        ProgressEvent.ProgressEventBuilder<ResourceModel, CallbackContext> resultBuilder = ProgressEvent.<ResourceModel, CallbackContext>builder();
 
         if (e instanceof AmazonServiceException) {
             AmazonServiceException amznException = (AmazonServiceException) e;
@@ -59,6 +58,10 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
                     resultBuilder.status(OperationStatus.FAILED);
                 } else if (Constants.ACCESS_DENIED_ERROR_CODE.equals(errorCode)) {
                     resultBuilder.errorCode(HandlerErrorCode.AccessDenied);
+                    resultBuilder.message(amznException.getMessage());
+                    resultBuilder.status(OperationStatus.FAILED);
+                }else if (Constants.STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE.equals(errorCode)) {
+                    resultBuilder.errorCode(HandlerErrorCode.NotFound);
                     resultBuilder.message(amznException.getMessage());
                     resultBuilder.status(OperationStatus.FAILED);
                 } else {

@@ -23,18 +23,21 @@
                 "Value"
             ]
         },
+        "CloudWatchLogsLogGroup": {
+            "type": "object",
+            "properties": {
+                "LogGroupArn": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                }
+            }
+        },
         "LogDestination": {
             "type": "object",
             "properties": {
                 "CloudWatchLogsLogGroup": {
-                    "type": "object",
-                    "properties": {
-                        "LogGroupArn": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 256
-                        }
-                    }
+                    "$ref": "#/definitions/CloudWatchLogsLogGroup"
                 }
             }
         },

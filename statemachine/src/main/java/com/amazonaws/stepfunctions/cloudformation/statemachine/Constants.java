@@ -13,4 +13,5 @@ public class Constants {
     public static final String DEFINITION_INVALID_FORMAT_ERROR_MESSAGE = "Invalid StateMachine definition file.";
     public static final String DEFINITION_MISSING_ERROR_MESSAGE = "Property validation failed. Required key [DefinitionS3Location] or [DefinitionString] not found.";
     public static final String DEFINITION_REDUNDANT_ERROR_MESSAGE = "Property validation failed. Please use either [DefinitionS3Location] or [DefinitionString] but not both.";
+    public static final String STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE = "StateMachineDoesNotExist";
 }
