@@ -11,6 +11,7 @@
             "stepfunctions",
             "cloudformation",
             "activity"
-        ]
+        ],
+        "protocolVersion": "2.0.0"
     }
 }
