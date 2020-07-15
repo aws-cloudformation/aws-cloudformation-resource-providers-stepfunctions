@@ -13,3 +13,8 @@ Resources:
           - "{\"StartAt\": \"HelloWorld\",  \"States\": {\"HelloWorld\": {\"Type\": \"Task\", \"Resource\": \"${activityArn}\", \"End\": true}}}"
           - {activityArn: !Ref MyActivity}
       RoleArn: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/doesNotExist"
+      Tags:
+        - Key: Key1
+          Value: Value1
+        - Key: Key2
+          Value: Value2
