@@ -1,5 +1,9 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
+import com.google.common.collect.Sets;
+
+import java.util.Set;
+
 public class Constants {
     public static final String THROTTLING_ERROR_CODE = "ThrottlingException";
     public static final String ACCESS_DENIED_ERROR_CODE = "AccessDeniedException";
@@ -14,4 +18,5 @@ public class Constants {
     public static final String DEFINITION_MISSING_ERROR_MESSAGE = "Property validation failed. Required key [DefinitionS3Location] or [DefinitionString] not found.";
     public static final String DEFINITION_REDUNDANT_ERROR_MESSAGE = "Property validation failed. Please use either [DefinitionS3Location] or [DefinitionString] but not both.";
     public static final String STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE = "StateMachineDoesNotExist";
+    public static final Set<String> INVALID_REQUESTS_ERROR_CODES = Sets.newHashSet("InvalidArn", "InvalidDefinition", "InvalidLoggingConfiguration", "InvalidName");
 }

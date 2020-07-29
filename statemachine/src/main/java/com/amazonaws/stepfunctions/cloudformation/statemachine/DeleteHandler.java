@@ -30,7 +30,6 @@ public class DeleteHandler extends ResourceHandler {
             proxy.injectCredentialsAndInvoke(deleteStateMachineRequest, sfnClient::deleteStateMachine);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(model)
                     .status(OperationStatus.SUCCESS)
                     .build();
         } catch (Exception e) {

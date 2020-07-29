@@ -60,8 +60,12 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
                     resultBuilder.errorCode(HandlerErrorCode.AccessDenied);
                     resultBuilder.message(amznException.getMessage());
                     resultBuilder.status(OperationStatus.FAILED);
-                }else if (Constants.STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE.equals(errorCode)) {
+                } else if (Constants.STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE.equals(errorCode)) {
                     resultBuilder.errorCode(HandlerErrorCode.NotFound);
+                    resultBuilder.message(amznException.getMessage());
+                    resultBuilder.status(OperationStatus.FAILED);
+                } else if (Constants.INVALID_REQUESTS_ERROR_CODES.contains(errorCode)) {
+                    resultBuilder.errorCode(HandlerErrorCode.InvalidRequest);
                     resultBuilder.message(amznException.getMessage());
                     resultBuilder.status(OperationStatus.FAILED);
                 } else {
