@@ -34,7 +34,7 @@ public class CreateHandler extends ResourceHandler {
             // Auto-generate a state machine name if one is not provided in the template.
             if (model.getStateMachineName() == null) {
                 model.setStateMachineName(IdentifierUtils.generateResourceIdentifier(
-                    request.getLogicalResourceIdentifier(), request.getClientRequestToken())
+                    request.getLogicalResourceIdentifier(), request.getClientRequestToken(), Constants.STATE_MACHINE_NAME_MAXLEN)
                 );
             }
 
