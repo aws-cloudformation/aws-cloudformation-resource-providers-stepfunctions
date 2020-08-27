@@ -22,6 +22,7 @@ public abstract class HandlerTestBase {
     protected static final String LOGGING_LEVEL = "ALL";
     protected static final Boolean LOGGING_INCLUDE_EXECUTION_DATA = true;
     protected static final String LOGGING_CLOUDWATCHLOGS_LOGARN = "log-group-arn";
+    protected static final Boolean TRACING_CONFIGURATION_ENABLED = false;
 
     protected static LoggingConfiguration createLoggingConfiguration() {
         LoggingConfiguration loggingConfiguration = new LoggingConfiguration();
@@ -32,6 +33,13 @@ public abstract class HandlerTestBase {
         ));
 
         return loggingConfiguration;
+    }
+
+    protected static TracingConfiguration createTracingConfiguration() {
+        TracingConfiguration tracingConfiguration = new TracingConfiguration();
+        tracingConfiguration.setEnabled(TRACING_CONFIGURATION_ENABLED);
+
+        return tracingConfiguration;
     }
 
     protected final static AmazonServiceException exception500 = new AmazonServiceException("Server error");

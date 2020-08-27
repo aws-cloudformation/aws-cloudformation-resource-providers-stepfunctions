@@ -42,6 +42,10 @@ public class UpdateHandler extends ResourceHandler {
                 updateStateMachineRequest.setLoggingConfiguration(Translator.getLoggingConfiguration(model.getLoggingConfiguration()));
             }
 
+            if (model.getTracingConfiguration() != null) {
+                updateStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(model.getTracingConfiguration()));
+            }
+
             proxy.injectCredentialsAndInvoke(updateStateMachineRequest, sfnClient::updateStateMachine);
 
             updateTags(request, proxy, sfnClient);

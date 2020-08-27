@@ -119,6 +119,31 @@ public class UpdateHandlerTest extends HandlerTestBase {
     }
 
     @Test
+    public void testUpdateExpressStateMachineWithTracingConfiguration() {
+        ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
+        listTagsForResourceResult.setTags(new ArrayList<>());
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(listTagsForResourceResult);
+
+        request.getDesiredResourceState().setTracingConfiguration(createTracingConfiguration());
+
+        UpdateStateMachineRequest updateStateMachineRequest = new UpdateStateMachineRequest();
+        updateStateMachineRequest.setStateMachineArn(STATE_MACHINE_ARN);
+        updateStateMachineRequest.setRoleArn(ROLE_ARN);
+        updateStateMachineRequest.setDefinition("{}");
+        updateStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(createTracingConfiguration()));
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(proxy, Mockito.times(1))
+                .injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any());
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+    }
+
+    @Test
     public void testDefinitionFromS3() throws Exception {
         request.getDesiredResourceState().setDefinitionString(null);
         request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));

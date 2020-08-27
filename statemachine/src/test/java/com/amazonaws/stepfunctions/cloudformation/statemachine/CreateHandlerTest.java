@@ -52,6 +52,7 @@ public class CreateHandlerTest extends HandlerTestBase {
                         .stateMachineType(STANDARD_STATE_MACHINE_TYPE)
                         .stateMachineName(STATE_MACHINE_NAME)
                         .loggingConfiguration(createLoggingConfiguration())
+                        .tracingConfiguration(createTracingConfiguration())
                         .build())
                 .build();
     }
@@ -66,6 +67,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         createStateMachineRequest.setDefinition("{}");
         createStateMachineRequest.setRoleArn(ROLE_ARN);
         createStateMachineRequest.setLoggingConfiguration(Translator.getLoggingConfiguration(createLoggingConfiguration()));
+        createStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(createTracingConfiguration()));
         createStateMachineRequest.setTags(new ArrayList<>());
 
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();

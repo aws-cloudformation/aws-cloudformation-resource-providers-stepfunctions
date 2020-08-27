@@ -31,4 +31,11 @@ public class Translator {
         return result;
     }
 
+    public static com.amazonaws.services.stepfunctions.model.TracingConfiguration getTracingConfiguration(TracingConfiguration input) {
+
+        com.amazonaws.services.stepfunctions.model.TracingConfiguration result = new com.amazonaws.services.stepfunctions.model.TracingConfiguration();
+        result.setEnabled(input.getEnabled());
+
+        return result;
+    }
 }

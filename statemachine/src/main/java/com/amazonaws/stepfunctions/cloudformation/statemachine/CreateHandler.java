@@ -51,6 +51,10 @@ public class CreateHandler extends ResourceHandler {
                 createStateMachineRequest.setLoggingConfiguration(Translator.getLoggingConfiguration(model.getLoggingConfiguration()));
             }
 
+            if (model.getTracingConfiguration() != null) {
+                createStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(model.getTracingConfiguration()));
+            }
+
             CreateStateMachineResult createStateMachineResult = proxy.injectCredentialsAndInvoke(createStateMachineRequest, sfnClient::createStateMachine);
             model.setArn(createStateMachineResult.getStateMachineArn());
             model.setName(model.getStateMachineName());
