@@ -65,8 +65,10 @@ public class UpdateHandler extends ResourceHandler {
 
         Set<Tag> currentUserTags = new HashSet<>();
         Set<Tag> previousTags = new HashSet<>();
+    
         currentUserTags.addAll(TaggingHelper.transformTags(request.getDesiredResourceState().getTags()));
         currentUserTags.addAll(TaggingHelper.transformTags(request.getDesiredResourceTags()));
+        previousTags.addAll(TaggingHelper.transformTags(request.getPreviousResourceState().getTags()));
         previousTags.addAll(TaggingHelper.transformTags(request.getPreviousResourceTags()));
 
         TaggingHelper.updateTags(stateMachineArn, previousTags, currentUserTags, proxy, sfnClient);

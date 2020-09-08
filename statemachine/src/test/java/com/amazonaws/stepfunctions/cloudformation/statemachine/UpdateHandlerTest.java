@@ -46,14 +46,12 @@ public class UpdateHandlerTest extends HandlerTestBase {
                 .region(REGION)
                 .awsAccountId(AWS_ACCOUNT_ID)
                 .desiredResourceState(ResourceModel.builder().arn(STATE_MACHINE_ARN).roleArn(ROLE_ARN).definitionString("{}").build())
+                .previousResourceState(ResourceModel.builder().arn(STATE_MACHINE_ARN).roleArn(ROLE_ARN).definitionString("{}").build())
                 .build();
     }
 
     @Test
-    public void testSuccess() {
-        ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
-        listTagsForResourceResult.setTags(Lists.newArrayList(new Tag().withKey("K1").withValue("V1"), new Tag().withKey("K2").withValue("V2")));
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(listTagsForResourceResult);
+    public void testSuccess() { 
 
         UntagResourceRequest untagResourceRequest = new UntagResourceRequest();
         untagResourceRequest.setResourceArn(STATE_MACHINE_ARN);
@@ -66,9 +64,14 @@ public class UpdateHandlerTest extends HandlerTestBase {
         ));
 
         Map<String, String> resourceTags = new HashMap<>();
+        Map<String, String> previousResourceTags = new HashMap<>();
+
         resourceTags.put("K3", "V3");
+        previousResourceTags.put("K1", "V1");
+        previousResourceTags.put("K2", "V2");
 
         request.setDesiredResourceTags(resourceTags);
+        request.setPreviousResourceTags(previousResourceTags);
 
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(untagResourceRequest), Mockito.any())).thenReturn(new UntagResourceResult());
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(tagResourceRequest), Mockito.any())).thenReturn(new TagResourceResult());
@@ -98,10 +101,6 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testUpdateExpressStateMachineWithLoggingConfiguration() {
-        ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
-        listTagsForResourceResult.setTags(new ArrayList<>());
-
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(listTagsForResourceResult);
 
         request.getDesiredResourceState().setLoggingConfiguration(createLoggingConfiguration());
 
