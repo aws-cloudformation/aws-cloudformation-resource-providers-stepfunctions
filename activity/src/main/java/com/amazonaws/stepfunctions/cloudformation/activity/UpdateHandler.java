@@ -45,13 +45,16 @@ public class UpdateHandler extends ResourceHandler {
     private void updateTags(ResourceHandlerRequest<ResourceModel> request, AmazonWebServicesClientProxy proxy, AWSStepFunctions sfnClient) {
         String activityArn = request.getDesiredResourceState().getArn();
 
-        List<Tag> previousUserTags = TaggingHelper.listTagsForResource(activityArn, proxy, sfnClient);
-
         Set<Tag> currentUserTags = new HashSet<>();
+        Set<Tag> previousTags = new HashSet<>();
+
         currentUserTags.addAll(TaggingHelper.transformTags(request.getDesiredResourceState().getTags()));
         currentUserTags.addAll(TaggingHelper.transformTags(request.getDesiredResourceTags()));
+        previousTags.addAll(TaggingHelper.transformTags(request.getPreviousResourceState().getTags()));
+        previousTags.addAll(TaggingHelper.transformTags(request.getPreviousResourceTags()));
 
-        TaggingHelper.updateTags(activityArn, Sets.newHashSet(previousUserTags), currentUserTags, proxy, sfnClient);
+        TaggingHelper.updateTags(activityArn, previousTags, currentUserTags, proxy, sfnClient);
+
     }
 
 }
