@@ -4,7 +4,14 @@ Resources:
   MyActivity:
     Type: "AWS::StepFunctions::Activity"
     Properties:
-      Name: "myActivityWithinStateMachine"
+      Name: !Join
+        - "-"
+        - - "myActivityWithinStateMachine"
+          - !Select
+            - 2
+            - !Split
+              - "/"
+              - !Ref "AWS::StackId"
   MyStateMachine:
     Type: "AWS::StepFunctions::StateMachine"
     Properties:

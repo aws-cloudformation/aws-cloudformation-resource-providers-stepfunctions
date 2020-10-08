@@ -5,7 +5,14 @@
     MyActivityWithTagsCanary:
       Type: "AWS::StepFunctions::Activity"
       Properties:
-        Name: "myActivityWithTags"
+        Name: !Join
+        - "-"
+        - - "myActivityWithTags"
+          - !Select
+            - 2
+            - !Split
+              - "/"
+              - !Ref "AWS::StackId"
         Tags:
           - Key: Key1
             Value: Value1

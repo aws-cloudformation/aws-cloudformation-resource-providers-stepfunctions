@@ -5,7 +5,14 @@
     MyActivity:
       Type: "AWS::StepFunctions::Activity"
       Properties:
-        Name: "myActivity"
+        Name: !Join
+        - "-"
+        - - "myActivity"
+          - !Select
+            - 2
+            - !Split
+              - "/"
+              - !Ref "AWS::StackId"
   Outputs:
     ActivityName:
       Value: !GetAtt [ MyActivity, Name ]
