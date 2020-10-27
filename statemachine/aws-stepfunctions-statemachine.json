@@ -25,6 +25,7 @@
         },
         "CloudWatchLogsLogGroup": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "LogGroupArn": {
                     "type": "string",
@@ -35,6 +36,7 @@
         },
         "LogDestination": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "CloudWatchLogsLogGroup": {
                     "$ref": "#/definitions/CloudWatchLogsLogGroup"
@@ -43,6 +45,7 @@
         },
         "LoggingConfiguration": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "Level": {
                     "type": "string",
@@ -67,6 +70,7 @@
         },
         "TracingConfiguration": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "Enabled": {
                     "type": "boolean"
@@ -75,6 +79,7 @@
         },
         "S3Location": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "Bucket": {
                     "type": "string"
@@ -92,6 +97,7 @@
         },
         "DefinitionSubstitutions": {
             "type": "object",
+            "additionalProperties": false,
             "patternProperties": {
                 ".*": {
                     "type": "string"
