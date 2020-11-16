@@ -143,6 +143,62 @@ public class CreateHandlerTest extends HandlerTestBase {
     }
 
     @Test
+    public void testCreateSuccess_whenDefinitionFromObject() {
+        Map<String, Object> definition = new HashMap<>();
+
+        Map<String, Object> lambdaState = new HashMap<>();
+        lambdaState.put("Resource", "${lambdaArn01}");
+
+        Map<String, Object> passState = new HashMap<>();
+        passState.put("Next", "${lambdaStateName}");
+
+        Map<String, Map<String, Object>> states = new HashMap<>();
+        states.put("lambda_01", lambdaState);
+        states.put("PassState", passState);
+
+        definition.put("States", states);
+
+        Map<String, String> substitutions = new HashMap<>();
+        substitutions.put("lambdaArn01", "lambdaArn01");
+        substitutions.put("lambdaStateName", "lambda_01");
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinition(definition);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+
+        String transformedDefinition = response.getResourceModel().getDefinitionString();
+        assertThat(!transformedDefinition.contains("${lambdaArn01}")).isTrue();
+        assertThat(!transformedDefinition.contains("${lambdaStateName}")).isTrue();
+
+        String expectedDefinitionString = "{\n  \"States\" : {\n    \"PassState\" : {\n      \"Next\" : \"lambda_01\"\n    },\n    \"lambda_01\" : {\n      \"Resource\" : \"lambdaArn01\"\n    }\n  }\n}";
+        assertThat(transformedDefinition.equals(expectedDefinitionString));
+    }
+
+    @Test
+    public void testThrowsInvalidRequest_whenDefinitionFromObject_objectIsInvalid() {
+        Map<String, Object> definition = new HashMap<>();
+        definition.put("InvalidField", new ClassThatJacksonCannotSerialize());
+        request.getDesiredResourceState().setDefinition(definition);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_INVALID_FORMAT_ERROR_MESSAGE);
+    }
+
+    @Test
     public void testDefinitionFromS3() throws Exception {
         request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
 
@@ -243,9 +299,8 @@ public class CreateHandlerTest extends HandlerTestBase {
     }
 
     @Test
-    public void testWithoutDefinition() {
+    public void testThrowsDefinitionMissing_whenNoDefinition() {
         request.getDesiredResourceState().setDefinitionString(null);
-        request.getDesiredResourceState().setDefinitionS3Location(null);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -256,7 +311,7 @@ public class CreateHandlerTest extends HandlerTestBase {
     }
 
     @Test
-    public void testWithMoreThanOneDefinitions() {
+    public void testThrowsDefinitionRedundant_whenMoreThanOneDefinition_DefinitionString_and_DefinitionS3Location() {
         request.getDesiredResourceState().setDefinitionString("{}");
         request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
 
@@ -267,5 +322,47 @@ public class CreateHandlerTest extends HandlerTestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_REDUNDANT_ERROR_MESSAGE);
     }
+
+    @Test
+    public void testThrowsDefinitionRedundant_whenMoreThanOneDefinition_DefinitionString_and_DefinitionObject() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getDesiredResourceState().setDefinition(new HashMap<>());
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_REDUNDANT_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testThrowsDefinitionRedundant_whenMoreThanOneDefinition_DefinitionObject_and_DefinitionS3Location() {
+        request.getDesiredResourceState().setDefinition(new HashMap<>());
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_REDUNDANT_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testThrowsDefinitionRedundant_whenMoreThanOneDefinition_DefinitionObject_and_DefinitionS3Location_and_DefinitionString() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getDesiredResourceState().setDefinition(new HashMap<>());
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_REDUNDANT_ERROR_MESSAGE);
+    }
+
+    private static class ClassThatJacksonCannotSerialize {}
 
 }

@@ -104,6 +104,10 @@
                 }
             },
             "minProperties": 1
+        },
+        "Definition": {
+            "type": "object",
+            "minProperties": 1
         }
     },
     "properties": {
@@ -150,6 +154,9 @@
         },
         "DefinitionSubstitutions": {
             "$ref": "#/definitions/DefinitionSubstitutions"
+        },
+        "Definition": {
+            "$ref": "#/definitions/Definition"
         },
         "Tags": {
             "type": "array",

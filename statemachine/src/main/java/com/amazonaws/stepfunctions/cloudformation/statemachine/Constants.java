@@ -15,9 +15,9 @@ public class Constants {
             "Neither the global service principal states.amazonaws.com, nor the regional one is authorized to assume the provided role";
     public static final Integer MAX_DEFINITION_SIZE = 1048576;
     public static final String DEFINITION_SIZE_LIMIT_ERROR_MESSAGE = "State Machine definition file cannot exceed 1MB.";
-    public static final String DEFINITION_INVALID_FORMAT_ERROR_MESSAGE = "Invalid StateMachine definition file.";
-    public static final String DEFINITION_MISSING_ERROR_MESSAGE = "Property validation failed. Required key [DefinitionS3Location] or [DefinitionString] not found.";
-    public static final String DEFINITION_REDUNDANT_ERROR_MESSAGE = "Property validation failed. Please use either [DefinitionS3Location] or [DefinitionString] but not both.";
+    public static final String DEFINITION_INVALID_FORMAT_ERROR_MESSAGE = "Invalid StateMachine definition.";
+    public static final String DEFINITION_MISSING_ERROR_MESSAGE = "Property validation failed. Required key [DefinitionS3Location], [DefinitionString] or [Definition] not found.";
+    public static final String DEFINITION_REDUNDANT_ERROR_MESSAGE = "Property validation failed. Please use one of [DefinitionS3Location], [DefinitionString] or [Definition].";
     public static final String STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE = "StateMachineDoesNotExist";
     public static final Set<String> INVALID_REQUESTS_ERROR_CODES = Sets.newHashSet("InvalidArn", "InvalidDefinition", "InvalidLoggingConfiguration", "InvalidName");
 }

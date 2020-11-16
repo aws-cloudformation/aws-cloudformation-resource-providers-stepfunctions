@@ -109,11 +109,11 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
         return StringUtils.replaceEachRepeatedly(definitionString, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
     }
 
-    protected String convertDefinitionObject(Map<String, Object> definitionObject) {
+    protected String convertDefinitionObjectToString(Map<String, Object> definitionObject) {
         try {
             return jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(definitionObject);
         } catch (JsonProcessingException e) {
-            throw new CfnInvalidRequestException("Invalid JSON: " + e.getMessage());
+            throw new TerminalException(Constants.DEFINITION_INVALID_FORMAT_ERROR_MESSAGE);
         }
     }
 
@@ -154,21 +154,13 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
 
     protected void processDefinition(AmazonWebServicesClientProxy proxy, ResourceModel model) {
         // Validate that only one Definition is present
-        List<Object> definitions = new ArrayList<>();
+        int numDefinitions = getNumDefinitionsInModel(model);
 
-        if (model.getDefinitionString() != null) {
-            definitions.add(model.getDefinitionString());
-        }
-
-        if (model.getDefinitionS3Location() != null) {
-            definitions.add(model.getDefinitionS3Location());
-        }
-
-        if (definitions.isEmpty()) {
+        if (numDefinitions == 0) {
             throw new TerminalException(Constants.DEFINITION_MISSING_ERROR_MESSAGE);
         }
 
-        if (definitions.size() > 1) {
+        if (numDefinitions > 1) {
             throw new TerminalException(Constants.DEFINITION_REDUNDANT_ERROR_MESSAGE);
         }
 
@@ -176,9 +168,31 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
             model.setDefinitionString(fetchS3Definition(model.getDefinitionS3Location(), proxy));
         }
 
+        if (model.getDefinition() != null) {
+            model.setDefinitionString(convertDefinitionObjectToString(model.getDefinition()));
+        }
+
         if (model.getDefinitionSubstitutions() != null) {
             model.setDefinitionString(transformDefinition(model.getDefinitionString(), model.getDefinitionSubstitutions()));
         }
+    }
+
+    private int getNumDefinitionsInModel(ResourceModel model) {
+        int definitionsCount = 0;
+
+        if (model.getDefinitionString() != null) {
+            definitionsCount++;
+        }
+
+        if (model.getDefinitionS3Location() != null) {
+            definitionsCount++;
+        }
+
+        if (model.getDefinition() != null) {
+            definitionsCount++;
+        }
+
+        return definitionsCount;
     }
 
 }

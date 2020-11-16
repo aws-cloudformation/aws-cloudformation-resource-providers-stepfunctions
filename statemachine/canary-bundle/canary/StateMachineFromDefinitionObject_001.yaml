@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "This template will create a simple state machine that contains one pass state. The definition is provided in object format."
+Resources:
+  MyStateMachineFromDefinitionObject:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      Definition:
+        StartAt: HelloWorld
+        States:
+          HelloWorld:
+            Type: Pass
+            Result: 1
+            End: true
+      RoleArn: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/doesNotExist"
