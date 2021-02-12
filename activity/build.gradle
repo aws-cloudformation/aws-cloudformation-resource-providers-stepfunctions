@@ -35,7 +35,7 @@ test {
     environment 'AWS_REGION', 'us-west-2'
 }
 
-def cfn_command = "${brazilGradle.path('[AWSCloudFormationRPDKJavaPluginTool]all.runtimefarm')}/bin/cfn"
+def cfn_command = "${brazilGradle.path('[AWSCloudFormationRPDKJavaPluginTool]run.runtimefarm')}/bin/cfn"
 
 // Generate RPDK wrapper source before compile
 task rpdkGenerateSource(type: Exec) {
