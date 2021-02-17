@@ -51,6 +51,9 @@
         "/properties/Arn"
     ],
     "readOnlyProperties": [
+        "/properties/Arn"
+    ],
+    "createOnlyProperties": [
         "/properties/Name"
     ],
     "handlers": {
