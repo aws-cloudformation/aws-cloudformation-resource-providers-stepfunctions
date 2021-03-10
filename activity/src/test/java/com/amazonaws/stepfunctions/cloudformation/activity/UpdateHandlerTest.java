@@ -1,6 +1,5 @@
 package com.amazonaws.stepfunctions.cloudformation.activity;
 
-import com.amazonaws.services.stepfunctions.model.ListTagsForResourceResult;
 import com.amazonaws.services.stepfunctions.model.Tag;
 import com.amazonaws.services.stepfunctions.model.TagResourceRequest;
 import com.amazonaws.services.stepfunctions.model.TagResourceResult;
@@ -20,6 +19,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -63,8 +63,8 @@ public class UpdateHandlerTest extends HandlerTestBase {
         request.setPreviousResourceTags(previousResourceTags);
         request.setDesiredResourceTags(resourceTags);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(untagResourceRequest), Mockito.any())).thenReturn(new UntagResourceResult());
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(tagResourceRequest), Mockito.any())).thenReturn(new TagResourceResult());
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(untagResourceRequest), Mockito.any(Function.class))).thenReturn(new UntagResourceResult());
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(tagResourceRequest), Mockito.any(Function.class))).thenReturn(new TagResourceResult());
 
         ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
 
@@ -79,7 +79,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
     @Test
     public void test500() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenThrow(exception500);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(UntagResourceRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
         
         Map<String, String> previousResourceTags = new HashMap<>();
         previousResourceTags.put("K3", "V3");

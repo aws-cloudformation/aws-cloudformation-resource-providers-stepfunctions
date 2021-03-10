@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -67,15 +68,16 @@ public class TaggingHelperTest extends HandlerTestBase {
     public void testListTagsForResource() {
         ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
         listTagsForResourceResult.setTags(Lists.newArrayList(new Tag().withKey("K1").withValue("V1")));
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(listTagsForResourceResult);
 
         ListTagsForResourceRequest listTagsForResourceRequest = new ListTagsForResourceRequest();
         listTagsForResourceRequest.setResourceArn(ACTIVITY_ARN);
 
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(listTagsForResourceRequest), Mockito.any(Function.class))).thenReturn(listTagsForResourceResult);
+
         TaggingHelper.listTagsForResource(ACTIVITY_ARN, proxy, client);
 
         Mockito.verify(proxy, Mockito.times(1))
-                .injectCredentialsAndInvoke(Mockito.eq(listTagsForResourceRequest), Mockito.any());
+                .injectCredentialsAndInvoke(Mockito.eq(listTagsForResourceRequest), Mockito.any((Function.class)));
     }
 
     @Test
@@ -132,15 +134,15 @@ public class TaggingHelperTest extends HandlerTestBase {
                 new Tag().withKey("K4").withValue("V4")
         ));
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any()))
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class)))
                 .thenReturn(new UntagResourceResult(), new TagResourceResult());
 
         TaggingHelper.updateTags(ACTIVITY_ARN, previousTags, currentTags, proxy, client);
 
         Mockito.verify(proxy, Mockito.times(1))
-                .injectCredentialsAndInvoke(Mockito.eq(tagResourceRequest), Mockito.any());
+                .injectCredentialsAndInvoke(Mockito.eq(tagResourceRequest), Mockito.any(Function.class));
         Mockito.verify(proxy, Mockito.times(1))
-                .injectCredentialsAndInvoke(Mockito.eq(untagResourceRequest), Mockito.any());
+                .injectCredentialsAndInvoke(Mockito.eq(untagResourceRequest), Mockito.any(Function.class));
     }
 
 }

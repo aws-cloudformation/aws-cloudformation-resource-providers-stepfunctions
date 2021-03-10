@@ -1,5 +1,6 @@
 package com.amazonaws.stepfunctions.cloudformation.activity;
 
+import com.amazonaws.services.stepfunctions.model.DescribeActivityRequest;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,7 +37,7 @@ public class ReadHandlerTest extends HandlerTestBase {
         describeActivityResult.setName(ACTIVITY_NAME);
         describeActivityResult.setActivityArn(ACTIVITY_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(describeActivityResult);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class))).thenReturn(describeActivityResult);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
             = handler.handleRequest(proxy, request, null, logger);
@@ -53,7 +56,7 @@ public class ReadHandlerTest extends HandlerTestBase {
 
     @Test
     public void test500() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenThrow(exception500);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);

@@ -8,8 +8,6 @@ import org.mockito.Mock;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
-import java.util.ArrayList;
-
 public abstract class HandlerTestBase {
 
     protected static final String LOGICAL_RESOURCE_ID = "randomName";

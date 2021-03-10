@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -67,7 +68,7 @@ public class TaggingHelperTest extends HandlerTestBase {
     public void testListTagsForResource() {
         ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
         listTagsForResourceResult.setTags(Lists.newArrayList(new Tag().withKey("K1").withValue("V1")));
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(listTagsForResourceResult);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(ListTagsForResourceRequest.class), Mockito.any())).thenReturn(listTagsForResourceResult);
 
         ListTagsForResourceRequest listTagsForResourceRequest = new ListTagsForResourceRequest();
         listTagsForResourceRequest.setResourceArn(STATE_MACHINE_ARN);
@@ -75,7 +76,7 @@ public class TaggingHelperTest extends HandlerTestBase {
         TaggingHelper.listTagsForResource(STATE_MACHINE_ARN, proxy, client);
 
         Mockito.verify(proxy, Mockito.times(1))
-                .injectCredentialsAndInvoke(Mockito.eq(listTagsForResourceRequest), Mockito.any());
+                .injectCredentialsAndInvoke(Mockito.eq(listTagsForResourceRequest), Mockito.any(Function.class));
     }
 
     @Test
@@ -138,9 +139,9 @@ public class TaggingHelperTest extends HandlerTestBase {
         TaggingHelper.updateTags(STATE_MACHINE_ARN, previousTags, currentTags, proxy, client);
 
         Mockito.verify(proxy, Mockito.times(1))
-                .injectCredentialsAndInvoke(Mockito.eq(tagResourceRequest), Mockito.any());
+                .injectCredentialsAndInvoke(Mockito.eq(tagResourceRequest), Mockito.any(Function.class));
         Mockito.verify(proxy, Mockito.times(1))
-                .injectCredentialsAndInvoke(Mockito.eq(untagResourceRequest), Mockito.any());
+                .injectCredentialsAndInvoke(Mockito.eq(untagResourceRequest), Mockito.any(Function.class));
     }
 
 }

@@ -1,5 +1,6 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
+import com.amazonaws.services.stepfunctions.model.DeleteStateMachineRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,6 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,7 +46,7 @@ public class DeleteHandlerTest extends HandlerTestBase {
 
     @Test
     public void test400() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenThrow(exception400);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DeleteStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception400);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -54,7 +57,7 @@ public class DeleteHandlerTest extends HandlerTestBase {
 
     @Test
     public void test500() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenThrow(exception500);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DeleteStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -66,7 +69,7 @@ public class DeleteHandlerTest extends HandlerTestBase {
 
     @Test
     public void testUnknownException() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenThrow(unknownException);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DeleteStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(unknownException);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);

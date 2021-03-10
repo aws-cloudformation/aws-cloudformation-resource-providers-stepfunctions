@@ -26,6 +26,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -73,8 +74,8 @@ public class UpdateHandlerTest extends HandlerTestBase {
         request.setDesiredResourceTags(resourceTags);
         request.setPreviousResourceTags(previousResourceTags);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(untagResourceRequest), Mockito.any())).thenReturn(new UntagResourceResult());
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(tagResourceRequest), Mockito.any())).thenReturn(new TagResourceResult());
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(untagResourceRequest), Mockito.any(Function.class))).thenReturn(new UntagResourceResult());
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(tagResourceRequest), Mockito.any(Function.class))).thenReturn(new TagResourceResult());
 
         ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
 
@@ -89,7 +90,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
     @Test
     public void test500() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenThrow(exception500);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(UpdateStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
 
         ProgressEvent<ResourceModel, CallbackContext> response
             = handler.handleRequest(proxy, request, null, logger);
@@ -114,7 +115,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
                 = handler.handleRequest(proxy, request, null, logger);
 
         Mockito.verify(proxy, Mockito.times(1))
-                .injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any());
+                .injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any(Function.class));
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -125,7 +126,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
         ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
         listTagsForResourceResult.setTags(new ArrayList<>());
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(listTagsForResourceResult);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(UpdateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(listTagsForResourceResult);
 
         request.getDesiredResourceState().setTracingConfiguration(createTracingConfiguration());
 
@@ -139,7 +140,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
                 = handler.handleRequest(proxy, request, null, logger);
 
         Mockito.verify(proxy, Mockito.times(1))
-                .injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any());
+                .injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any(Function.class));
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);

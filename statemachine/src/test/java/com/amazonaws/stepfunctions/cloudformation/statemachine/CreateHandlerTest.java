@@ -22,6 +22,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -73,7 +74,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(createStateMachineRequest), Mockito.any())).thenReturn(createStateMachineResult);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(createStateMachineRequest), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
             = handler.handleRequest(proxy, request, null, logger);
@@ -93,7 +94,7 @@ public class CreateHandlerTest extends HandlerTestBase {
     public void test500() {
         request.getDesiredResourceState().setDefinitionString("{}");
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenThrow(exception500);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -131,7 +132,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(createStateMachineResult);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -168,7 +169,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(createStateMachineResult);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -255,7 +256,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -275,7 +276,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);

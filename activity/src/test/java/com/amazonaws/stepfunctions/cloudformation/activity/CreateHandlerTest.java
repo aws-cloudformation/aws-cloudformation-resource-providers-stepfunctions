@@ -12,6 +12,7 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.ArrayList;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,7 +41,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateActivityResult createActivityResult = new CreateActivityResult();
         createActivityResult.setActivityArn(ACTIVITY_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(createActivityRequest), Mockito.any())).thenReturn(createActivityResult);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(createActivityRequest), Mockito.any(Function.class))).thenReturn(createActivityResult);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
             = handler.handleRequest(proxy, request, null, logger);
@@ -58,7 +59,7 @@ public class CreateHandlerTest extends HandlerTestBase {
 
     @Test
     public void test500() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any())).thenThrow(exception500);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateActivityRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
