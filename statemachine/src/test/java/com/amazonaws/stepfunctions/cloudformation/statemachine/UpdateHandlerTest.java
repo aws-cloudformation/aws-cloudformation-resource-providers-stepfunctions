@@ -158,7 +158,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
         UpdateStateMachineResult updateStateMachineResult = new UpdateStateMachineResult();
         ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any()))
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class)))
                 .thenReturn(getObjectResult, updateStateMachineResult, listTagsForResourceResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response

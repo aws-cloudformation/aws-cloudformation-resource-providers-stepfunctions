@@ -68,7 +68,7 @@ public class TaggingHelperTest extends HandlerTestBase {
     public void testListTagsForResource() {
         ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
         listTagsForResourceResult.setTags(Lists.newArrayList(new Tag().withKey("K1").withValue("V1")));
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(ListTagsForResourceRequest.class), Mockito.any())).thenReturn(listTagsForResourceResult);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(ListTagsForResourceRequest.class), Mockito.any(Function.class))).thenReturn(listTagsForResourceResult);
 
         ListTagsForResourceRequest listTagsForResourceRequest = new ListTagsForResourceRequest();
         listTagsForResourceRequest.setResourceArn(STATE_MACHINE_ARN);
@@ -133,7 +133,7 @@ public class TaggingHelperTest extends HandlerTestBase {
                 new Tag().withKey("K4").withValue("V4")
         ));
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any()))
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class)))
                 .thenReturn(new UntagResourceResult(), new TagResourceResult());
 
         TaggingHelper.updateTags(STATE_MACHINE_ARN, previousTags, currentTags, proxy, client);
