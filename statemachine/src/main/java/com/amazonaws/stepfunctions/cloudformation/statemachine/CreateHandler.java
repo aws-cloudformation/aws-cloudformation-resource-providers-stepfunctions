@@ -9,9 +9,13 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import software.amazon.cloudformation.resource.IdentifierUtils;
 
 import java.util.List;
+
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.DefinitionProcessor.processDefinition;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.DefinitionProcessor.validateDefinitionCount;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.ResourceModelUtils.processStateMachineName;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.ResourceModelUtils.updateModelFromResult;
 
 public class CreateHandler extends ResourceHandler {
 
@@ -26,47 +30,60 @@ public class CreateHandler extends ResourceHandler {
 
         final ResourceModel model = request.getDesiredResourceState();
 
+        MetricsRecorder metricsRecorder = new MetricsRecorder(HandlerOperationType.CREATE);
+        metricsRecorder.setMetricsFromResourceModel(model);
+
         try {
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
             List<Tag> tags = TaggingHelper.consolidateTags(request);
 
-            // Auto-generate a state machine name if one is not provided in the template.
-            if (model.getStateMachineName() == null) {
-                model.setStateMachineName(IdentifierUtils.generateResourceIdentifier(
-                    request.getLogicalResourceIdentifier(), request.getClientRequestToken(), Constants.STATE_MACHINE_NAME_MAXLEN)
-                );
-            }
+            processStateMachineName(request, model);
+            validateDefinitionCount(model);
+            processDefinition(proxy, model, metricsRecorder);
 
-            processDefinition(proxy, model);
-
-            CreateStateMachineRequest createStateMachineRequest = new CreateStateMachineRequest();
-            createStateMachineRequest.setRoleArn(model.getRoleArn());
-            createStateMachineRequest.setName(model.getStateMachineName());
-            createStateMachineRequest.setTags(tags);
-            createStateMachineRequest.setDefinition(model.getDefinitionString());
-            createStateMachineRequest.setType(model.getStateMachineType());
-
-            if (model.getLoggingConfiguration() != null) {
-                createStateMachineRequest.setLoggingConfiguration(Translator.getLoggingConfiguration(model.getLoggingConfiguration()));
-            }
-
-            if (model.getTracingConfiguration() != null) {
-                createStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(model.getTracingConfiguration()));
-            }
+            CreateStateMachineRequest createStateMachineRequest = buildCreateStateMachineRequestFromModel(model, tags);
 
             CreateStateMachineResult createStateMachineResult = proxy.injectCredentialsAndInvoke(createStateMachineRequest, sfnClient::createStateMachine);
-            model.setArn(createStateMachineResult.getStateMachineArn());
+
+            updateModelFromResult(model, createStateMachineResult);
+            // The model's name is only required if the handler operation is successful.
             model.setName(model.getStateMachineName());
 
-            return ProgressEvent.<ResourceModel, CallbackContext>builder()
+            ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
                     .status(OperationStatus.SUCCESS)
                     .build();
+
+            metricsRecorder.setOperationSuccessful(true);
+
+            return progressEvent;
         } catch (Exception e) {
             logger.log("ERROR Creating StateMachine, caused by " + e.toString());
-            return handleDefaultError(request, e);
+
+            return handleDefaultError(request, e, metricsRecorder);
+        } finally {
+            logger.log(metricsRecorder.generateMetricsString());
         }
+    }
+
+    private CreateStateMachineRequest buildCreateStateMachineRequestFromModel(ResourceModel model, List<Tag> tags) {
+        CreateStateMachineRequest createStateMachineRequest = new CreateStateMachineRequest();
+        createStateMachineRequest.setRoleArn(model.getRoleArn());
+        createStateMachineRequest.setName(model.getStateMachineName());
+        createStateMachineRequest.setTags(tags);
+        createStateMachineRequest.setDefinition(model.getDefinitionString());
+        createStateMachineRequest.setType(model.getStateMachineType());
+
+        if (model.getLoggingConfiguration() != null) {
+            createStateMachineRequest.setLoggingConfiguration(Translator.getLoggingConfiguration(model.getLoggingConfiguration()));
+        }
+
+        if (model.getTracingConfiguration() != null) {
+            createStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(model.getTracingConfiguration()));
+        }
+
+        return createStateMachineRequest;
     }
 
 }

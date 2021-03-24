@@ -15,12 +15,12 @@ public abstract class HandlerTestBase {
     protected static final String EXPECTED_NAME = LOGICAL_RESOURCE_ID + "-" + GUID;
     protected static final String DEFINITION = "randomDefinition";
     protected static final String ROLE_ARN = "arn:aws:iam::123456789012:role/service-role/StatesExecutionRole-us-east-1";
-    protected static final String STANDARD_STATE_MACHINE_TYPE = "STANDARD";
-    protected static final String EXPRESS_STATE_MACHINE_TYPE = "EXPRESS";
     protected static final String LOGGING_LEVEL = "ALL";
     protected static final Boolean LOGGING_INCLUDE_EXECUTION_DATA = true;
     protected static final String LOGGING_CLOUDWATCHLOGS_LOGARN = "log-group-arn";
-    protected static final Boolean TRACING_CONFIGURATION_ENABLED = false;
+    protected static final Boolean TRACING_CONFIGURATION_DISABLED = false;
+    protected static final Boolean TRACING_CONFIGURATION_ENABLED = true;
+
 
     protected static LoggingConfiguration createLoggingConfiguration() {
         LoggingConfiguration loggingConfiguration = new LoggingConfiguration();
@@ -33,9 +33,9 @@ public abstract class HandlerTestBase {
         return loggingConfiguration;
     }
 
-    protected static TracingConfiguration createTracingConfiguration() {
+    protected static TracingConfiguration createTracingConfiguration(Boolean isEnabled) {
         TracingConfiguration tracingConfiguration = new TracingConfiguration();
-        tracingConfiguration.setEnabled(TRACING_CONFIGURATION_ENABLED);
+        tracingConfiguration.setEnabled(isEnabled);
 
         return tracingConfiguration;
     }

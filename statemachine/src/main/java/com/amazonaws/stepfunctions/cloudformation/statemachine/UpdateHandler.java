@@ -4,7 +4,6 @@ import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.AWSStepFunctionsClientBuilder;
 import com.amazonaws.services.stepfunctions.model.Tag;
 import com.amazonaws.services.stepfunctions.model.UpdateStateMachineRequest;
-import com.google.common.collect.Sets;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -12,8 +11,10 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.DefinitionProcessor.processDefinition;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.DefinitionProcessor.validateDefinitionCount;
 
 public class UpdateHandler extends ResourceHandler {
 
@@ -28,36 +29,54 @@ public class UpdateHandler extends ResourceHandler {
 
         final ResourceModel model = request.getDesiredResourceState();
 
+        MetricsRecorder metricsRecorder = new MetricsRecorder(HandlerOperationType.UPDATE);
+        metricsRecorder.setMetricsFromResourceModel(model);
+
         try {
             AWSStepFunctions sfnClient = AWSStepFunctionsClientBuilder.defaultClient();
 
-            processDefinition(proxy, model);
+            validateDefinitionCount(model);
+            processDefinition(proxy, model, metricsRecorder);
 
-            UpdateStateMachineRequest updateStateMachineRequest = new UpdateStateMachineRequest();
-            updateStateMachineRequest.setStateMachineArn(model.getArn());
-            updateStateMachineRequest.setRoleArn(model.getRoleArn());
-            updateStateMachineRequest.setDefinition(model.getDefinitionString());
-
-            if (model.getLoggingConfiguration() != null) {
-                updateStateMachineRequest.setLoggingConfiguration(Translator.getLoggingConfiguration(model.getLoggingConfiguration()));
-            }
-
-            if (model.getTracingConfiguration() != null) {
-                updateStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(model.getTracingConfiguration()));
-            }
+            UpdateStateMachineRequest updateStateMachineRequest = buildUpdateStateMachineRequestFromModel(model);
 
             proxy.injectCredentialsAndInvoke(updateStateMachineRequest, sfnClient::updateStateMachine);
-
             updateTags(request, proxy, sfnClient);
 
-            return ProgressEvent.<ResourceModel, CallbackContext>builder()
+            metricsRecorder.setOperationSuccessful(true);
+
+            ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
                     .status(OperationStatus.SUCCESS)
                     .build();
+
+            metricsRecorder.setOperationSuccessful(true);
+
+            return progressEvent;
         } catch (Exception e) {
             logger.log("ERROR Updating StateMachine, caused by " + e.toString());
-            return handleDefaultError(request, e);
+
+            return handleDefaultError(request, e, metricsRecorder);
+        } finally {
+            logger.log(metricsRecorder.generateMetricsString());
         }
+    }
+
+    private UpdateStateMachineRequest buildUpdateStateMachineRequestFromModel(ResourceModel model) {
+        UpdateStateMachineRequest updateStateMachineRequest = new UpdateStateMachineRequest();
+        updateStateMachineRequest.setStateMachineArn(model.getArn());
+        updateStateMachineRequest.setRoleArn(model.getRoleArn());
+        updateStateMachineRequest.setDefinition(model.getDefinitionString());
+
+        if (model.getLoggingConfiguration() != null) {
+            updateStateMachineRequest.setLoggingConfiguration(Translator.getLoggingConfiguration(model.getLoggingConfiguration()));
+        }
+
+        if (model.getTracingConfiguration() != null) {
+            updateStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(model.getTracingConfiguration()));
+        }
+
+        return updateStateMachineRequest;
     }
 
     private void updateTags(ResourceHandlerRequest<ResourceModel> request, AmazonWebServicesClientProxy proxy, AWSStepFunctions sfnClient) {
@@ -65,7 +84,7 @@ public class UpdateHandler extends ResourceHandler {
 
         Set<Tag> currentUserTags = new HashSet<>();
         Set<Tag> previousTags = new HashSet<>();
-    
+
         currentUserTags.addAll(TaggingHelper.transformTags(request.getDesiredResourceState().getTags()));
         currentUserTags.addAll(TaggingHelper.transformTags(request.getDesiredResourceTags()));
         previousTags.addAll(TaggingHelper.transformTags(request.getPreviousResourceState().getTags()));

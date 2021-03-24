@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -25,9 +26,12 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.OPERATION_FAILURE;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.OPERATION_SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +43,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
     public static final String DEFAULT_S3_KEY = "Key";
     public static final String DEFAULT_S3_OBJECT_VERSION = "1";
 
+    private final ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
     private ResourceHandlerRequest<ResourceModel> request;
 
     @BeforeEach
@@ -46,13 +51,15 @@ public class UpdateHandlerTest extends HandlerTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .region(REGION)
                 .awsAccountId(AWS_ACCOUNT_ID)
-                .desiredResourceState(ResourceModel.builder().arn(STATE_MACHINE_ARN).roleArn(ROLE_ARN).definitionString("{}").build())
-                .previousResourceState(ResourceModel.builder().arn(STATE_MACHINE_ARN).roleArn(ROLE_ARN).definitionString("{}").build())
+                .desiredResourceState(ResourceModel.builder().arn(STATE_MACHINE_ARN).roleArn(ROLE_ARN).build())
+                .previousResourceState(ResourceModel.builder().arn(STATE_MACHINE_ARN).roleArn(ROLE_ARN).build())
                 .build();
     }
 
     @Test
-    public void testSuccess() { 
+    public void testSuccess() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getPreviousResourceState().setDefinitionString("{}");
 
         UntagResourceRequest untagResourceRequest = new UntagResourceRequest();
         untagResourceRequest.setResourceArn(STATE_MACHINE_ARN);
@@ -90,6 +97,9 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
     @Test
     public void test500() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getPreviousResourceState().setDefinitionString("{}");
+
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(UpdateStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
 
         ProgressEvent<ResourceModel, CallbackContext> response
@@ -102,8 +112,9 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testUpdateExpressStateMachineWithLoggingConfiguration() {
-
         request.getDesiredResourceState().setLoggingConfiguration(createLoggingConfiguration());
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getPreviousResourceState().setDefinitionString("{}");
 
         UpdateStateMachineRequest updateStateMachineRequest = new UpdateStateMachineRequest();
         updateStateMachineRequest.setStateMachineArn(STATE_MACHINE_ARN);
@@ -123,18 +134,21 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testUpdateExpressStateMachineWithTracingConfiguration() {
+
         ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
         listTagsForResourceResult.setTags(new ArrayList<>());
 
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(UpdateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(listTagsForResourceResult);
 
-        request.getDesiredResourceState().setTracingConfiguration(createTracingConfiguration());
+        request.getDesiredResourceState().setTracingConfiguration(createTracingConfiguration(TRACING_CONFIGURATION_DISABLED));
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getPreviousResourceState().setDefinitionString("{}");
 
         UpdateStateMachineRequest updateStateMachineRequest = new UpdateStateMachineRequest();
         updateStateMachineRequest.setStateMachineArn(STATE_MACHINE_ARN);
         updateStateMachineRequest.setRoleArn(ROLE_ARN);
         updateStateMachineRequest.setDefinition("{}");
-        updateStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(createTracingConfiguration()));
+        updateStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(createTracingConfiguration(TRACING_CONFIGURATION_DISABLED)));
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -148,8 +162,8 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
     @Test
     public void testDefinitionFromS3() throws Exception {
-        request.getDesiredResourceState().setDefinitionString(null);
         request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+        request.getPreviousResourceState().setDefinitionString("{}");
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("{}"));
@@ -167,6 +181,52 @@ public class UpdateHandlerTest extends HandlerTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getResourceModel().getDefinitionString()).isEqualTo("{}");
+    }
+
+    // Metrics Logging Tests
+    @Test
+    public void testLogsCorrectOperationType() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getPreviousResourceState().setDefinitionString("{}");
+
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(HandlerOperationType.UPDATE.toString());
+    }
+
+    @Test
+    public void testLogsCorrectOperationStatus_Success() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getPreviousResourceState().setDefinitionString("{}");
+
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(OPERATION_SUCCESS.loggingKey);
+    }
+
+    @Test
+    public void testLogsCorrectOperationStatus_Failure() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getPreviousResourceState().setDefinitionString("{}");
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(UpdateStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(3)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(OPERATION_FAILURE.loggingKey);
     }
 
 }

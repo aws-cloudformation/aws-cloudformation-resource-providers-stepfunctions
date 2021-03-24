@@ -1,10 +1,11 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
+import com.amazonaws.services.stepfunctions.model.CloudWatchLogsLogGroup;
+import com.amazonaws.services.stepfunctions.model.LogDestination;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import com.amazonaws.services.stepfunctions.model.LogDestination;
-import com.amazonaws.services.stepfunctions.model.CloudWatchLogsLogGroup;
 
 public class Translator {
 

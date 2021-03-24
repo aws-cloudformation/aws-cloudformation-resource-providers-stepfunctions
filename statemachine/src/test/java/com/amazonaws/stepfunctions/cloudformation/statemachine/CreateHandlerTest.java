@@ -2,6 +2,7 @@ package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineRequest;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineResult;
@@ -13,6 +14,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -21,9 +24,22 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.DEFINITION_INVALID_FORMAT;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.MULTIPLE_DEFINITIONS_PROVIDED;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.OPERATION_FAILURE;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.OPERATION_SUCCESS;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.S3_DEFINITION_JSON;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.S3_DEFINITION_SIZE_LIMIT_EXCEEDED;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.S3_DEFINITION_YAML;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.STATE_MACHINE_EXPRESS_TYPE;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.STATE_MACHINE_NAME_GENERATED;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.STATE_MACHINE_STANDARD_TYPE;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.TEMPLATE_MISSING_DEFINITION;
+import static com.amazonaws.stepfunctions.cloudformation.statemachine.MetricsLoggingKeys.TRACING_CONFIGURATION_PROVIDED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,13 +50,20 @@ public class CreateHandlerTest extends HandlerTestBase {
     public static final String DEFAULT_S3_KEY = "Key";
     public static final String DEFAULT_S3_OBJECT_VERSION = "1";
 
+    @Mock
+    protected ObjectMetadata mockS3ObjectMetadata;
+
     static {
         mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
     }
 
-    private CreateHandler handler = new CreateHandler();
+    private final ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+    private final CreateHandler handler = new CreateHandler();
 
     private ResourceHandlerRequest<ResourceModel> request;
+
+    // Used for testing invalid object format
+    private static class ClassThatJacksonCannotSerialize {}
 
     @BeforeEach
     public void setup() {
@@ -50,10 +73,10 @@ public class CreateHandlerTest extends HandlerTestBase {
                 .desiredResourceState(ResourceModel.builder()
                         .arn(STATE_MACHINE_ARN)
                         .roleArn(ROLE_ARN)
-                        .stateMachineType(STANDARD_STATE_MACHINE_TYPE)
+                        .stateMachineType(Constants.STANDARD_STATE_MACHINE_TYPE)
                         .stateMachineName(STATE_MACHINE_NAME)
                         .loggingConfiguration(createLoggingConfiguration())
-                        .tracingConfiguration(createTracingConfiguration())
+                        .tracingConfiguration(createTracingConfiguration(TRACING_CONFIGURATION_DISABLED))
                         .build())
                 .build();
     }
@@ -64,11 +87,11 @@ public class CreateHandlerTest extends HandlerTestBase {
 
         CreateStateMachineRequest createStateMachineRequest = new CreateStateMachineRequest();
         createStateMachineRequest.setName(STATE_MACHINE_NAME);
-        createStateMachineRequest.setType(STANDARD_STATE_MACHINE_TYPE);
+        createStateMachineRequest.setType(Constants.STANDARD_STATE_MACHINE_TYPE);
         createStateMachineRequest.setDefinition("{}");
         createStateMachineRequest.setRoleArn(ROLE_ARN);
         createStateMachineRequest.setLoggingConfiguration(Translator.getLoggingConfiguration(createLoggingConfiguration()));
-        createStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(createTracingConfiguration()));
+        createStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(createTracingConfiguration(TRACING_CONFIGURATION_DISABLED)));
         createStateMachineRequest.setTags(new ArrayList<>());
 
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
@@ -364,6 +387,341 @@ public class CreateHandlerTest extends HandlerTestBase {
         assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_REDUNDANT_ERROR_MESSAGE);
     }
 
-    private static class ClassThatJacksonCannotSerialize {}
+    // Metrics Logging Tests
+    @Test
+    public void testLogsCorrectOperationType() {
+        request.getDesiredResourceState().setDefinitionString("{}");
 
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(HandlerOperationType.CREATE.toString());
+    }
+
+    @Test
+    public void testLogsCorrectOperationStatus_Success() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(OPERATION_SUCCESS.loggingKey);
+    }
+
+    @Test
+    public void testLogsCorrectOperationStatus_Failure() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(3)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(OPERATION_FAILURE.loggingKey);
+    }
+
+    @Test
+    public void testLogsStateMachineNameGenerated_whenNoNameInRequest() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getDesiredResourceState().setStateMachineName(null);
+        request.setLogicalResourceIdentifier("LogicalResourceIdentifier");
+        request.setClientRequestToken("ClientRequestToken");
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(STATE_MACHINE_NAME_GENERATED.loggingKey);
+    }
+
+    @Test
+    public void testDoesNotLogStateMachineNameGenerated_whenNameInRequest() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getDesiredResourceState().setStateMachineName("ProvidedName");
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).doesNotContain(STATE_MACHINE_NAME_GENERATED.loggingKey);
+    }
+
+    @Test
+    public void testLogsStateMachineType_whenTypeIsExpress() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getDesiredResourceState().setStateMachineType(Constants.EXPRESS_STATE_MACHINE_TYPE);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(STATE_MACHINE_EXPRESS_TYPE.loggingKey);
+    }
+
+    @Test
+    public void testLogsStateMachineType_whenTypeIsStandard() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getDesiredResourceState().setStateMachineType(Constants.STANDARD_STATE_MACHINE_TYPE);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(STATE_MACHINE_STANDARD_TYPE.loggingKey);
+    }
+
+    @Test
+    public void testLogsTracing_whenTracingIsEnabledTrue() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getDesiredResourceState().setTracingConfiguration(createTracingConfiguration(TRACING_CONFIGURATION_ENABLED));
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(TRACING_CONFIGURATION_PROVIDED.loggingKey);
+    }
+
+    @Test
+    public void testDoesNotLogTracing_whenTracingIsEnabledFalse() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getDesiredResourceState().setTracingConfiguration(createTracingConfiguration(TRACING_CONFIGURATION_DISABLED));
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).doesNotContain(TRACING_CONFIGURATION_PROVIDED.loggingKey);
+    }
+
+    @Test
+    public void testLogsMissingDefinitions_whenNoDefinitionProvided() {
+        request.getDesiredResourceState().setDefinitionString(null);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(3)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(TEMPLATE_MISSING_DEFINITION.loggingKey);
+    }
+
+    @Test
+    public void testLogsMultipleDefinitions_whenMultipleDefinitionsProvided() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(3)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(MULTIPLE_DEFINITIONS_PROVIDED.loggingKey);
+    }
+
+    @Test
+    public void testLogsDefinitionObjectInvalidFormat_whenDefinitionObjectInvalidFormat() {
+        Map<String, Object> definition = new HashMap<>();
+        definition.put("InvalidField", new ClassThatJacksonCannotSerialize());
+        request.getDesiredResourceState().setDefinition(definition);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(3)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(DEFINITION_INVALID_FORMAT.loggingKey);
+    }
+
+    @Test
+    public void testLogsS3DefinitionFormat_whenJson() throws Exception {
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectContent(new StringInputStream("{}"));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(S3_DEFINITION_JSON.loggingKey);
+    }
+
+    @Test
+    public void testLogsS3DefinitionFormat_whenYaml() throws Exception {
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectContent(new StringInputStream("Comment: Hello World"));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(S3_DEFINITION_YAML.loggingKey);
+    }
+
+    @Test
+    public void testLogsS3DefinitionInvalidFormat_whenInvalidJson() throws Exception {
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectContent(new StringInputStream("{"));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(3)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(DEFINITION_INVALID_FORMAT.loggingKey);
+    }
+
+    @Test
+    public void testLogsS3DefinitionInvalidFormat_whenInvalidYaml() throws Exception {
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectContent(new StringInputStream(",,,"));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(3)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(DEFINITION_INVALID_FORMAT.loggingKey);
+    }
+
+    @Test
+    public void testLogsS3DefinitionSizeLimitExceeded_whenSizeLimitExceeded() throws Exception {
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectMetadata(mockS3ObjectMetadata);
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.when(mockS3ObjectMetadata.getContentLength()).thenReturn((long) (Constants.MAX_DEFINITION_SIZE + 1));
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(3)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(S3_DEFINITION_SIZE_LIMIT_EXCEEDED.loggingKey);
+    }
 }

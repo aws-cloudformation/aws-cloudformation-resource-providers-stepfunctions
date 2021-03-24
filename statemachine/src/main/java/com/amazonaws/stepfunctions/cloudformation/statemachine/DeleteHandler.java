@@ -21,21 +21,36 @@ public class DeleteHandler extends ResourceHandler {
 
         final ResourceModel model = request.getDesiredResourceState();
 
+        MetricsRecorder metricsRecorder = new MetricsRecorder(HandlerOperationType.DELETE);
+
         try {
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
-            DeleteStateMachineRequest deleteStateMachineRequest = new DeleteStateMachineRequest();
-            deleteStateMachineRequest.setStateMachineArn(model.getArn());
+            DeleteStateMachineRequest deleteStateMachineRequest = buildDeleteStateMachineRequestFromModel(model);
 
             proxy.injectCredentialsAndInvoke(deleteStateMachineRequest, sfnClient::deleteStateMachine);
 
-            return ProgressEvent.<ResourceModel, CallbackContext>builder()
+            ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .status(OperationStatus.SUCCESS)
                     .build();
+
+            metricsRecorder.setOperationSuccessful(true);
+
+            return progressEvent;
         } catch (Exception e) {
             logger.log("ERROR Deleting StateMachine, caused by " + e.toString());
-            return handleDefaultError(request, e);
+
+            return handleDefaultError(request, e, metricsRecorder);
+        } finally {
+            logger.log(metricsRecorder.generateMetricsString());
         }
+    }
+
+    private DeleteStateMachineRequest buildDeleteStateMachineRequestFromModel(ResourceModel model) {
+        DeleteStateMachineRequest deleteStateMachineRequest = new DeleteStateMachineRequest();
+        deleteStateMachineRequest.setStateMachineArn(model.getArn());
+
+        return deleteStateMachineRequest;
     }
 
 }
