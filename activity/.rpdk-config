@@ -1,0 +1,17 @@
+{
+    "typeName": "AWS::StepFunctions::Activity",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.stepfunctions.cloudformation.activity.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.stepfunctions.cloudformation.activity.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "stepfunctions",
+            "cloudformation",
+            "activity"
+        ],
+        "protocolVersion": "2.0.0"
+    }
+}
