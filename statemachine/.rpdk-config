@@ -1,0 +1,17 @@
+{
+    "typeName": "AWS::StepFunctions::StateMachine",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.stepfunctions.cloudformation.statemachine.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.stepfunctions.cloudformation.statemachine.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "stepfunctions",
+            "cloudformation",
+            "statemachine"
+        ],
+        "protocolVersion": "2.0.0"
+    }
+}

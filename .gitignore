@@ -1,0 +1,23 @@
+# IDE
+*.iml
+
+# build
+.gradle
+gradlew
+gradlew.bat
+build
+
+# rpdk log
+rpdk.log
+env
+wrapper
+
+# auto-generated files
+**/*.zip
+**/*.gz
+
+# auto-generated docs
+**/docs
+
+# Log files
+**/rpdk.log
