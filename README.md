@@ -1,4 +1,4 @@
-## CloudFormation Resource Provider Package For Step Functions
+## CloudFormation Resource Provider Package For AWS Step Functions
 
 The CloudFormation Resource Provider Package For AWS Step Functions
 
