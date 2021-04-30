@@ -20,4 +20,3 @@ Resources:
       Handler: com.amazonaws.stepfunctions.cloudformation.activity.HandlerWrapper::testEntrypoint
       Runtime: java8
       CodeUri: ./target/aws-stepfunctions-activity-handler-1.0-SNAPSHOT.jar
-

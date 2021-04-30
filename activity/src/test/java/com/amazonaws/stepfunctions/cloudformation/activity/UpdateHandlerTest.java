@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class UpdateHandlerTest extends HandlerTestBase { 
+public class UpdateHandlerTest extends HandlerTestBase {
 
     private UpdateHandler handler = new UpdateHandler();
 
@@ -55,7 +55,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
 
         Map<String, String> resourceTags = new HashMap<>();
         Map<String, String> previousResourceTags = new HashMap<>();
-        
+
         resourceTags.put("K3", "V3");
         previousResourceTags.put("K2", "V2");
         previousResourceTags.put("K1", "V1");
@@ -80,7 +80,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
     @Test
     public void test500() {
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(UntagResourceRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
-        
+
         Map<String, String> previousResourceTags = new HashMap<>();
         previousResourceTags.put("K3", "V3");
         request.setPreviousResourceTags(previousResourceTags);
