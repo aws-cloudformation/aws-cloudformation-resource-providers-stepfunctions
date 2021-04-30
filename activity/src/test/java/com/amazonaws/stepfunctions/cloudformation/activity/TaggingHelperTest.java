@@ -65,6 +65,35 @@ public class TaggingHelperTest extends HandlerTestBase {
     }
 
     @Test
+    public void testConsolidateTagsWithSystemTags() {
+        ResourceModel model = new ResourceModel();
+        model.setTags(Lists.newArrayList(new TagsEntry("K1", "V1"), new TagsEntry("K2", "V2")));
+
+        Map<String, String> resourceTags = new HashMap<>();
+        resourceTags.put("K2", "V2");
+        resourceTags.put("K3", "V3");
+
+        Map<String, String> systemTags = new HashMap<>();
+        systemTags.put("K4", "V4");
+
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .desiredResourceTags(resourceTags)
+                .systemTags(systemTags)
+                .build();
+
+        List<Tag> tags = TaggingHelper.consolidateTags(request);
+        List<Tag> expectedTags = Lists.newArrayList(
+                new Tag().withKey("K1").withValue("V1"),
+                new Tag().withKey("K2").withValue("V2"),
+                new Tag().withKey("K3").withValue("V3"),
+                new Tag().withKey("K4").withValue("V4")
+        );
+
+        assertThat(Sets.newHashSet(tags)).isEqualTo(Sets.newHashSet(expectedTags));
+    }
+
+    @Test
     public void testListTagsForResource() {
         ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
         listTagsForResourceResult.setTags(Lists.newArrayList(new Tag().withKey("K1").withValue("V1")));
@@ -78,6 +107,24 @@ public class TaggingHelperTest extends HandlerTestBase {
 
         Mockito.verify(proxy, Mockito.times(1))
                 .injectCredentialsAndInvoke(Mockito.eq(listTagsForResourceRequest), Mockito.any((Function.class)));
+    }
+
+    @Test
+    public void testListTagsForResource_withNullTags() {
+        ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
+        listTagsForResourceResult.setTags(null);
+
+        ListTagsForResourceRequest listTagsForResourceRequest = new ListTagsForResourceRequest();
+        listTagsForResourceRequest.setResourceArn(ACTIVITY_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(listTagsForResourceRequest), Mockito.any(Function.class))).thenReturn(listTagsForResourceResult);
+
+        List<Tag> result = TaggingHelper.listTagsForResource(ACTIVITY_ARN, proxy, client);
+
+        Mockito.verify(proxy, Mockito.times(1))
+                .injectCredentialsAndInvoke(Mockito.eq(listTagsForResourceRequest), Mockito.any((Function.class)));
+
+        assertThat(result).isEqualTo(new ArrayList<>());
     }
 
     @Test
