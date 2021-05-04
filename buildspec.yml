@@ -2,9 +2,11 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-        java: openjdk8
-        python: 3.7
+      java: openjdk8
+      python: 3.7
     commands:
+      -  mvn --version
+      -  pip install --upgrade 'six==1.15.0'
       -  pip install pre-commit cloudformation-cli-java-plugin
   build:
     commands:
@@ -17,7 +19,7 @@ phases:
           echo "Folders to build: $dirs"
           for directory in $dirs; do
             cd "$directory"
-            mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B clean verify --no-transfer-progress
+            mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B clean verify
             if [ "$?" -ne 0 ] ; then
                 echo "Build failed!"
                 exit 1
