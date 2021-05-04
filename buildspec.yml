@@ -6,8 +6,6 @@ phases:
       python: 3.7
     commands:
       -  mvn --version
-      -  mvn clean install
-      -  mvn --version
       -  pip install --upgrade 'six==1.15.0'
       -  pip install pre-commit cloudformation-cli-java-plugin
   build:
