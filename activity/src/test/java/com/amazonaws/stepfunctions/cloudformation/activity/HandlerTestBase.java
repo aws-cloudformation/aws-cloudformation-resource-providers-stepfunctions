@@ -7,10 +7,6 @@ import org.mockito.Mock;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
-import static com.amazonaws.stepfunctions.cloudformation.activity.Constants.ACCESS_DENIED_ERROR_CODE;
-import static com.amazonaws.stepfunctions.cloudformation.activity.Constants.ACTIVITY_DOES_NOT_EXIST_ERROR_CODE;
-import static com.amazonaws.stepfunctions.cloudformation.activity.Constants.THROTTLING_ERROR_CODE;
-
 public abstract class HandlerTestBase {
 
     protected final static AmazonServiceException exception500 = new AmazonServiceException("Server error");
