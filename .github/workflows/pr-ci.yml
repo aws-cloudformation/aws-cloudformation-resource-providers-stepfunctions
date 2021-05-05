@@ -29,7 +29,7 @@ jobs:
           python-version: 3.7
       - name: Set up cloudformation-cli-java-plugin
         run: pip install cloudformation-cli-java-plugin
-      - name: install and run pre-commit
+      - name: install and run pre-commit for all files
         uses: pre-commit/action@v2.0.0
         with:
           extra_args: --all-files
