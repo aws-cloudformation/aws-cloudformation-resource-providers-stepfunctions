@@ -33,7 +33,7 @@ jobs:
         uses: pre-commit/action@v2.0.0
         with:
           extra_args: --all-files
-      - name: Run mvn clean verify for all resources
+      - name: Run mvn clean verify for Activity and State Machine resources
         run: |
           cd ./activity
           mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B clean verify
