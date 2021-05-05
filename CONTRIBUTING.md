@@ -30,6 +30,11 @@ information to effectively respond to your bug report or contribution.
     - Run `git merge upstream/main`
 2. Create a new feature branch:
     - Run `git checkout -b myFeatureBranch`
+3. Make changes to your local feature branch.
+4. Add and commit your changes.
+5. Push your changes:
+    - Run `git push --set-upstream origin myFeatureBranch`
+6. On GitHub, open a pull request comparing your forked repository's feature branch to the main repository's `main` branch.
 
 ## Reporting Bugs/Feature Requests
 
