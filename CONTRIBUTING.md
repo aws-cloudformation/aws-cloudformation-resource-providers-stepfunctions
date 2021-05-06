@@ -7,6 +7,12 @@ Please read through this document before submitting any issues or pull requests 
 information to effectively respond to your bug report or contribution.
 
 
+## Prerequisites
+
+1. Create a new fork of the main repository by following [these instructions](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo)
+2. Install version `3.8.1` of Apache Maven from https://maven.apache.org/install.html
+3. Install Java 8 from https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html
+
 ## Reporting Bugs/Feature Requests
 
 We welcome you to use the GitHub issue tracker to report bugs or suggest features.
