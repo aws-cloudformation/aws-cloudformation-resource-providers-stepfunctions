@@ -11,13 +11,13 @@ Instructions on repository setup and the local development workflow can be found
 
 ## More Resources
 
-- ####[AWS Step Functions Documentation](https://aws.amazon.com/step-functions/?step-functions.sort-by=item.additionalFields.postDateTime&step-functions.sort-order=desc)
-- ####[AWS Step Functions Getting Started](https://aws.amazon.com/step-functions/getting-started/)
-- ####[Tutorial - Create a State Machine using AWS CloudFormation](https://docs.aws.amazon.com/step-functions/latest/dg/tutorial-lambda-state-machine-cloudformation.html)
-- ####[Code of Conduct](./CODE_OF_CONDUCT.md)
-- ####[Contributing Guide](./CONTRIBUTING.md)
-- ####[License](./LICENSE)
-- ####[Notice](./NOTICE)
+- [AWS Step Functions Documentation](https://aws.amazon.com/step-functions/?step-functions.sort-by=item.additionalFields.postDateTime&step-functions.sort-order=desc)
+- [AWS Step Functions Getting Started](https://aws.amazon.com/step-functions/getting-started/)
+- [Tutorial - Create a State Machine using AWS CloudFormation](https://docs.aws.amazon.com/step-functions/latest/dg/tutorial-lambda-state-machine-cloudformation.html)
+- [Code of Conduct](./CODE_OF_CONDUCT.md)
+- [Contributing Guide](./CONTRIBUTING.md)
+- [License](./LICENSE)
+- [Notice](./NOTICE)
 
 ## License
 
