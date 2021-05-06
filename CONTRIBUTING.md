@@ -9,21 +9,12 @@ information to effectively respond to your bug report or contribution.
 
 ## Repository Setup
 
-1. Create a new fork of the main repository:
-    - In the top-right corner of the page, click Fork
-    - A dialog will appear, with your username. Click your username to create your fork
-2. Clone your newly created forked repository:
-    - Switch to Terminal
-    - Set the following information: `GITHUB_USER_NAME="<USERNAME>"`
-    - Run `git clone "git@github.com:$GITHUB_USER_NAME/aws-cloudformation-resource-providers-stepfunctions.git"`
-3. Add the main resource providers GitHub repository as a remote upstream repository:
-    - Run `git remote add upstream "git@github.com:aws-cloudformation/aws-cloudformation-resource-providers-stepfunctions.git"`
-    - Run `git fetch --all`
-    - Run `git branch --set-upstream-to upstream/main`
+1. Create a new fork of the main repository by following [these instructions](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo)
+2. Install the latest version of Apache Maven from https://maven.apache.org/install.html
 
 ## Local Development
 
-1. Ensure your `main` branch is up to date:
+1. Ensure your forked repository's `main` branch is up to date:
     - Run `git checkout main`
     - Run `git fetch --all`
     - Run `git status`. Ensure your `main` branch is clean
