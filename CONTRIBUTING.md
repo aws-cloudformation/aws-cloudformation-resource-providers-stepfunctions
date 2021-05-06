@@ -7,25 +7,11 @@ Please read through this document before submitting any issues or pull requests 
 information to effectively respond to your bug report or contribution.
 
 
-## Repository Setup
+## Prerequisites
 
 1. Create a new fork of the main repository by following [these instructions](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo)
-2. Install the latest version of Apache Maven from https://maven.apache.org/install.html
-
-## Local Development
-
-1. Ensure your forked repository's `main` branch is up to date:
-    - Run `git checkout main`
-    - Run `git fetch --all`
-    - Run `git status`. Ensure your `main` branch is clean
-    - Run `git merge upstream/main`
-2. Create a new feature branch:
-    - Run `git checkout -b myFeatureBranch`
-3. Make changes to your local feature branch.
-4. Add and commit your changes.
-5. Push your changes:
-    - Run `git push --set-upstream origin myFeatureBranch`
-6. On GitHub, open a pull request comparing your forked repository's feature branch to the main repository's `main` branch.
+2. Install version `3.8.1` of Apache Maven from https://maven.apache.org/install.html
+3. Install Java 8 from https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html
 
 ## Reporting Bugs/Feature Requests
 
