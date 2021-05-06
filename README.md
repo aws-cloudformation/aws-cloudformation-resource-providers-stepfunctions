@@ -1,6 +1,7 @@
 # CloudFormation Resource Providers Package For AWS Step Functions
 
 ## Description
+
 This repository contains the resource providers for the `AWS::StepFunctions::*` namespace. There are two resources under this namespace:
   - [AWS::StepFunctions::StateMachine](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-stepfunctions-statemachine.html)
   - [AWS::StepFunctions::Activity](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-stepfunctions-activity.html)
