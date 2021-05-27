@@ -1,5 +1,6 @@
 package com.amazonaws.stepfunctions.cloudformation.activity;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.stepfunctions.model.CreateActivityRequest;
 import com.amazonaws.services.stepfunctions.model.CreateActivityResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.cloudformation.exceptions.TerminalException;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -14,6 +17,9 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import java.util.ArrayList;
 import java.util.function.Function;
 
+import static com.amazonaws.stepfunctions.cloudformation.activity.Constants.ACCESS_DENIED_ERROR_CODE;
+import static com.amazonaws.stepfunctions.cloudformation.activity.Constants.ACTIVITY_DOES_NOT_EXIST_ERROR_CODE;
+import static com.amazonaws.stepfunctions.cloudformation.activity.Constants.THROTTLING_ERROR_CODE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
@@ -67,6 +73,72 @@ public class CreateHandlerTest extends HandlerTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getMessage()).isEqualTo(exception500.getMessage());
+    }
+
+    @Test
+    public void testThrottlingError() {
+        AmazonServiceException exceptionThrottling = new AmazonServiceException(THROTTLING_ERROR_CODE);
+        exceptionThrottling.setStatusCode(400);
+        exceptionThrottling.setErrorCode(THROTTLING_ERROR_CODE);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateActivityRequest.class), Mockito.any(Function.class))).thenThrow(exceptionThrottling);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(exceptionThrottling.getMessage());
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.Throttling);
+    }
+
+    @Test
+    public void testAccessDeniedError() {
+        AmazonServiceException exceptionAccessDenied = new AmazonServiceException(ACCESS_DENIED_ERROR_CODE);
+        exceptionAccessDenied.setStatusCode(400);
+        exceptionAccessDenied.setErrorCode(ACCESS_DENIED_ERROR_CODE);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateActivityRequest.class), Mockito.any(Function.class))).thenThrow(exceptionAccessDenied);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(exceptionAccessDenied.getMessage());
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AccessDenied);
+    }
+
+    @Test
+    public void testActivityDoesNotExistError() {
+        AmazonServiceException exceptionActivityDoesNotExist = new AmazonServiceException(ACTIVITY_DOES_NOT_EXIST_ERROR_CODE);
+        exceptionActivityDoesNotExist.setStatusCode(400);
+        exceptionActivityDoesNotExist.setErrorCode(ACTIVITY_DOES_NOT_EXIST_ERROR_CODE);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateActivityRequest.class), Mockito.any(Function.class))).thenThrow(exceptionActivityDoesNotExist);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(exceptionActivityDoesNotExist.getMessage());
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+    }
+
+    @Test
+    public void testTerminalException() {
+        TerminalException terminalException = new TerminalException("Terminal Exception");
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateActivityRequest.class), Mockito.any(Function.class))).thenThrow(terminalException);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(terminalException.getMessage());
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 
 }

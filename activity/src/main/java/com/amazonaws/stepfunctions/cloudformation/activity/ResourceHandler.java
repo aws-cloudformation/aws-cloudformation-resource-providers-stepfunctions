@@ -11,7 +11,7 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
 
     /**
      * Generic strategy to handle errors.
-     * https://w.amazon.com/bin/view/AWS21/Design/Uluru/HandlerContract/
+     * https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-test-contract.html
      */
     protected ProgressEvent<ResourceModel, CallbackContext> handleDefaultError(ResourceHandlerRequest<ResourceModel> request, Exception e) {
         ProgressEvent.ProgressEventBuilder<ResourceModel, CallbackContext> resultBuilder = ProgressEvent.<ResourceModel, CallbackContext>builder();

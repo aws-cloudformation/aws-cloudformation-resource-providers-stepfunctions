@@ -87,14 +87,11 @@ public class MetricsRecorder {
             setAreDefinitionSubstitutionsProvided(true);
         }
 
-        if (model.getStateMachineType() != null) {
-            if (model.getStateMachineType().equals(Constants.STANDARD_STATE_MACHINE_TYPE)) {
-                setStateMachineStandardType(true);
-            }
-
-            if (model.getStateMachineType().equals(Constants.EXPRESS_STATE_MACHINE_TYPE)) {
-                setStateMachineExpressType(true);
-            }
+        // State Machine type is STANDARD by default
+        if (model.getStateMachineType() == null || model.getStateMachineType().equals(Constants.STANDARD_STATE_MACHINE_TYPE)) {
+            setStateMachineStandardType(true);
+        } else if (model.getStateMachineType().equals(Constants.EXPRESS_STATE_MACHINE_TYPE)) {
+            setStateMachineExpressType(true);
         }
 
         if (model.getLoggingConfiguration() != null) {

@@ -525,6 +525,26 @@ public class CreateHandlerTest extends HandlerTestBase {
     }
 
     @Test
+    public void testLogsStateMachineType_whenTypeIsNull() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+        request.getDesiredResourceState().setStateMachineType(null);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
+        List<String> loggedStrings = argumentCaptor.getAllValues();
+        String metricsString = loggedStrings.get(loggedStrings.size() - 1);
+
+        assertThat(metricsString).contains(STATE_MACHINE_STANDARD_TYPE.loggingKey);
+    }
+
+    @Test
     public void testLogsTracing_whenTracingIsEnabledTrue() {
         request.getDesiredResourceState().setDefinitionString("{}");
         request.getDesiredResourceState().setTracingConfiguration(createTracingConfiguration(TRACING_CONFIGURATION_ENABLED));

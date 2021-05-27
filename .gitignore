@@ -1,5 +1,6 @@
 # IDE
 *.iml
+.idea/
 
 # build
 .gradle
