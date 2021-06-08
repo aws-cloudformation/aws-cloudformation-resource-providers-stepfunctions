@@ -112,9 +112,6 @@ Uluru contract tests can be run for a given resource by:
 Canaries for each resource are defined in their respective `canary-bundle` directory (eg. `./statemachine/canary-bundle`). More details on how the canaries are defined and executed, as well as the metrics they emit, can be found here: https://w.amazon.com/bin/view/AWS21/Design/Uluru/Onboarding_Guide/Uluru_Operations_Guide/#HOnboardingCanaries
 
 ##Troubleshooting
-- While running `git fetch upstream`, I see errors like `ERROR: Repository not found. 
-  fatal: Could not read from remote repository. Please make sure you have the correct access rights and the repository exists.`
-    - If the repository is private, ensure you are a member of the `resource-provider-owner-stepfunctions` GitHub team: https://github.com/orgs/aws-cloudformation/teams/resource-provider-owner-stepfunctions/members
 - While performing Brazil or Maven commands, I observe an error saying the `.rpdk-config file is invalid`.
   - Open the config file at `statemachine/.rpdk-config` or `activity/.rpdk-config`.
   - Remove "artifact_type" and "executableEntrypoint" keys from the config.
