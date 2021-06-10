@@ -24,6 +24,8 @@ public class ReadHandler extends ResourceHandler {
         final ResourceModel model = request.getDesiredResourceState();
 
         try {
+            validateResourceArn(model.getArn());
+
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
             DescribeActivityRequest describeActivityRequest = new DescribeActivityRequest();

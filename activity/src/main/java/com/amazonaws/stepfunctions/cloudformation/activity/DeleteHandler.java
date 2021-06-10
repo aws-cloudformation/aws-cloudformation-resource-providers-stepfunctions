@@ -2,6 +2,7 @@ package com.amazonaws.stepfunctions.cloudformation.activity;
 
 import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.model.DeleteActivityRequest;
+import com.amazonaws.services.stepfunctions.model.DescribeActivityRequest;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -22,7 +23,14 @@ public class DeleteHandler extends ResourceHandler {
         final ResourceModel model = request.getDesiredResourceState();
 
         try {
+            validateResourceArn(model.getArn());
+
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
+
+            // Validate that the resource exists
+            DescribeActivityRequest describeActivityRequest = new DescribeActivityRequest();
+            describeActivityRequest.setActivityArn(model.getArn());
+            proxy.injectCredentialsAndInvoke(describeActivityRequest, sfnClient::describeActivity);
 
             DeleteActivityRequest deleteActivityRequest = new DeleteActivityRequest();
             deleteActivityRequest.setActivityArn(model.getArn());
@@ -30,7 +38,6 @@ public class DeleteHandler extends ResourceHandler {
             proxy.injectCredentialsAndInvoke(deleteActivityRequest, sfnClient::deleteActivity);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(model)
                     .status(OperationStatus.SUCCESS)
                     .build();
         } catch (Exception e) {

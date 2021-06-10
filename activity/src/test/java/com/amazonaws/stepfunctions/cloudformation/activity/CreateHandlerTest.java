@@ -34,7 +34,10 @@ public class CreateHandlerTest extends HandlerTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .region(REGION)
                 .awsAccountId(AWS_ACCOUNT_ID)
-                .desiredResourceState(ResourceModel.builder().name(ACTIVITY_NAME).build())
+                .desiredResourceState(ResourceModel.builder()
+                        .name(ACTIVITY_NAME)
+                        .build()
+                )
                 .build();
     }
 

@@ -13,6 +13,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -36,8 +37,16 @@ public class UpdateHandlerTest extends HandlerTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .region(REGION)
                 .awsAccountId(AWS_ACCOUNT_ID)
-                .desiredResourceState(ResourceModel.builder().arn(ACTIVITY_ARN).name(ACTIVITY_NAME).build())
-                .previousResourceState(ResourceModel.builder().arn(ACTIVITY_ARN).name(ACTIVITY_NAME).build())
+                .desiredResourceState(ResourceModel.builder()
+                        .arn(ACTIVITY_ARN)
+                        .name(ACTIVITY_NAME)
+                        .build()
+                )
+                .previousResourceState(ResourceModel.builder()
+                        .arn(ACTIVITY_ARN)
+                        .name(ACTIVITY_NAME)
+                        .build()
+                )
                 .build();
     }
 
@@ -91,6 +100,20 @@ public class UpdateHandlerTest extends HandlerTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getMessage()).isEqualTo(exception500.getMessage());
+    }
+
+    @Test
+    public void testResourceArnIsNull_returnsNotFound() {
+        request.setDesiredResourceState(ResourceModel.builder()
+                .name(ACTIVITY_NAME)
+                .build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
     }
 
 }

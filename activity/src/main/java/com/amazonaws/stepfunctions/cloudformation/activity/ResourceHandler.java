@@ -30,7 +30,7 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
                     resultBuilder.errorCode(HandlerErrorCode.AccessDenied);
                     resultBuilder.message(amznException.getMessage());
                     resultBuilder.status(OperationStatus.FAILED);
-                } else if (Constants.ACTIVITY_DOES_NOT_EXIST_ERROR_CODE.equals(errorCode)) {
+                } else if (Constants.RESOURCE_NOT_FOUND_ERROR_CODES.contains(errorCode)) {
                     resultBuilder.errorCode(HandlerErrorCode.NotFound);
                     resultBuilder.message(amznException.getMessage());
                     resultBuilder.status(OperationStatus.FAILED);
@@ -59,6 +59,15 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
         }
 
         return resultBuilder.build();
+    }
+
+    protected void validateResourceArn(String resourceArn) {
+        if (resourceArn == null) {
+            AmazonServiceException exception = new AmazonServiceException(Constants.INVALID_ARN_ERROR_CODE);
+            exception.setStatusCode(400);
+            exception.setErrorCode(Constants.INVALID_ARN_ERROR_CODE);
+            throw exception;
+        }
     }
 
 }

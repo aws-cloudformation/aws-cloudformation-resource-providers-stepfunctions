@@ -28,6 +28,8 @@ public class UpdateHandler extends ResourceHandler {
         final ResourceModel model = request.getDesiredResourceState();
 
         try {
+            validateResourceArn(model.getArn());
+
             AWSStepFunctions sfnClient = AWSStepFunctionsClientBuilder.defaultClient();
 
             updateTags(request, proxy, sfnClient);
