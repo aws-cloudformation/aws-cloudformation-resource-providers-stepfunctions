@@ -61,11 +61,16 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
         return resultBuilder.build();
     }
 
-    protected void validateResourceArn(String resourceArn) {
+    /**
+     * Validates that the activity ARN is not null
+     * @param resourceArn The resource ARN for the activity
+     * @throws AmazonServiceException Thrown if the activity's ARN is null
+     */
+    protected void verifyActivityArnIsPresent(String resourceArn) throws AmazonServiceException {
         if (resourceArn == null) {
-            AmazonServiceException exception = new AmazonServiceException(Constants.INVALID_ARN_ERROR_CODE);
+            AmazonServiceException exception = new AmazonServiceException(Constants.ACTIVITY_ARN_NOT_FOUND_MESSAGE);
             exception.setStatusCode(400);
-            exception.setErrorCode(Constants.INVALID_ARN_ERROR_CODE);
+            exception.setErrorCode(Constants.ACTIVITY_DOES_NOT_EXIST_ERROR_CODE);
             throw exception;
         }
     }

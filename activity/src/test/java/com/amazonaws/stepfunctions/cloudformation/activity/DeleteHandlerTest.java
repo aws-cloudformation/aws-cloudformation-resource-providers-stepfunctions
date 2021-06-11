@@ -104,23 +104,18 @@ public class DeleteHandlerTest extends HandlerTestBase {
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
 
-        assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(response.getMessage()).contains(Constants.ACTIVITY_ARN_NOT_FOUND_MESSAGE);
     }
 
     @Test
-    public void testResourceDoesNotExist_returnsNotFound() {
-        AmazonServiceException resourceNotFoundException = new AmazonServiceException("Activity does not exist");
-        resourceNotFoundException.setStatusCode(400);
-        resourceNotFoundException.setErrorCode(Constants.ACTIVITY_DOES_NOT_EXIST_ERROR_CODE);
-
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class))).thenThrow(resourceNotFoundException);
+    public void testActivityDoesNotExist_returnsNotFound() {
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class))).thenThrow(activityDoesNotExistException);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
 
-        assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
     }

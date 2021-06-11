@@ -23,11 +23,11 @@ public class DeleteHandler extends ResourceHandler {
         final ResourceModel model = request.getDesiredResourceState();
 
         try {
-            validateResourceArn(model.getArn());
+            verifyActivityArnIsPresent(model.getArn());
 
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
-            // Validate that the resource exists
+            // Validate that the activity exists
             DescribeActivityRequest describeActivityRequest = new DescribeActivityRequest();
             describeActivityRequest.setActivityArn(model.getArn());
             proxy.injectCredentialsAndInvoke(describeActivityRequest, sfnClient::describeActivity);

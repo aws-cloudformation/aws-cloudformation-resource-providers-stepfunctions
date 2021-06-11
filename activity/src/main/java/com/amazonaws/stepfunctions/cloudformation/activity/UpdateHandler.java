@@ -3,7 +3,6 @@ package com.amazonaws.stepfunctions.cloudformation.activity;
 import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.AWSStepFunctionsClientBuilder;
 import com.amazonaws.services.stepfunctions.model.Tag;
-import com.google.common.collect.Sets;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -11,7 +10,6 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class UpdateHandler extends ResourceHandler {
@@ -28,7 +26,7 @@ public class UpdateHandler extends ResourceHandler {
         final ResourceModel model = request.getDesiredResourceState();
 
         try {
-            validateResourceArn(model.getArn());
+            verifyActivityArnIsPresent(model.getArn());
 
             AWSStepFunctions sfnClient = AWSStepFunctionsClientBuilder.defaultClient();
 
