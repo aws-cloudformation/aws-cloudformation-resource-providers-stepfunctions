@@ -1,6 +1,6 @@
 {
-  "StateMachineName": "ThisStateMachineDoesNotExist",
-  "RoleArn": "arn:aws:iam::757728263703:role/service-role/StepFunctions-MyStateMachineNest-role-d52ab9f9",
+  "StateMachineName": "{{ContractTestInvalidStateMachineName}}",
+  "RoleArn": "{{ContractTestStateMachineRole}}",
   "StateMachineType": "STANDARD",
   "Definition": {
     "StartAt": "Hello",
