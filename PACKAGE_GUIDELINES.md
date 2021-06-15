@@ -105,7 +105,7 @@ Uluru contract tests can be run for a given resource by:
 2. In a separate terminal window, navigate to the  root directory of the resource (eg. `./statemachine`) and execute the following command:
     - `sam local start-lambda`
 3. In the original terminal window, run the tests by executing the following command:
-    - `cfn test`
+    - `cfn test --enforce-timeout 240`
     - Note: to run a single contract test, append the following to the end of the above command: `-- -k contract_create_delete`
 
 ##Canaries
