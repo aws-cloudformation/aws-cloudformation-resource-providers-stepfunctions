@@ -4,13 +4,14 @@ Description: AWS SAM template for the AWS::StepFunctions::StateMachine resource 
 
 Globals:
   Function:
-    Timeout: 60  # docker start-up times can be long for SAM CLI
+    Timeout: 180  # docker start-up times can be long for SAM CLI
 
 Resources:
   TypeFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: com.amazonaws.stepfunctions.cloudformation.statemachine.HandlerWrapper::handleRequest
+      MemorySize: 256
       Runtime: java8
       CodeUri: ./target/aws-stepfunctions-statemachine-handler-1.0-SNAPSHOT.jar
 
@@ -18,5 +19,6 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: com.amazonaws.stepfunctions.cloudformation.statemachine.HandlerWrapper::testEntrypoint
+      MemorySize: 256
       Runtime: java8
       CodeUri: ./target/aws-stepfunctions-statemachine-handler-1.0-SNAPSHOT.jar

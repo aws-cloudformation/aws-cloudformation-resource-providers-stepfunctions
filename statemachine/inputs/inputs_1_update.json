@@ -1,0 +1,18 @@
+{
+  "StateMachineName": "ContractTestStateMachineName",
+  "RoleArn": "arn:aws:iam::757728263703:role/service-role/StepFunctions-MyStateMachineNest-role-d52ab9f9",
+  "StateMachineType": "STANDARD",
+  "Definition": {
+    "StartAt": "Hello",
+    "States": {
+      "Hello": {
+        "Type": "Pass",
+        "Next": "World"
+      },
+      "World": {
+        "Type": "Pass",
+        "End": true
+      }
+    }
+  }
+}

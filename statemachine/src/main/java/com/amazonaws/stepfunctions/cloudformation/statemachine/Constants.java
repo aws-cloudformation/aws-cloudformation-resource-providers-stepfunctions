@@ -19,6 +19,7 @@ public class Constants {
     public static final String DEFINITION_MISSING_ERROR_MESSAGE = "Property validation failed. Required key [DefinitionS3Location], [DefinitionString] or [Definition] not found.";
     public static final String DEFINITION_REDUNDANT_ERROR_MESSAGE = "Property validation failed. Please use one of [DefinitionS3Location], [DefinitionString] or [Definition].";
     public static final String STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE = "StateMachineDoesNotExist";
+    public static final String STATE_MACHINE_DOES_NOT_EXIST_ERROR_MESSAGE = "State machine does not exist";
     public static final Set<String> INVALID_REQUESTS_ERROR_CODES = Sets.newHashSet("InvalidArn", "InvalidDefinition", "InvalidLoggingConfiguration", "InvalidName");
     public static final String STANDARD_STATE_MACHINE_TYPE = "STANDARD";
     public static final String EXPRESS_STATE_MACHINE_TYPE = "EXPRESS";

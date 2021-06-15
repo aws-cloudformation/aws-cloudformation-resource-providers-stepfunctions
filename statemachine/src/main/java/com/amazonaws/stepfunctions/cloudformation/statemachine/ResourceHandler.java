@@ -17,7 +17,9 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
     protected ProgressEvent<ResourceModel, CallbackContext> handleDefaultError(ResourceHandlerRequest<ResourceModel> request, Exception e, MetricsRecorder metricsRecorder) {
         ProgressEvent.ProgressEventBuilder<ResourceModel, CallbackContext> resultBuilder = ProgressEvent.<ResourceModel, CallbackContext>builder();
 
-        metricsRecorder.setMetricsFromException(e);
+        if (metricsRecorder != null) {
+            metricsRecorder.setMetricsFromException(e);
+        }
 
         if (e instanceof AmazonServiceException) {
             AmazonServiceException amznException = (AmazonServiceException) e;
@@ -70,6 +72,25 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
         }
 
         return resultBuilder.build();
+    }
+
+    /**
+     * Validates that the state machine ARN is not null
+     * @param resourceArn The resource ARN for the state machine
+     * @throws AmazonServiceException Thrown if the state machine's ARN is null
+     */
+    protected void verifyStateMachineArnIsPresent(String resourceArn) throws AmazonServiceException {
+        if (resourceArn == null) {
+            throw getStateMachineDoesNotExistException();
+        }
+    }
+
+    protected AmazonServiceException getStateMachineDoesNotExistException() {
+        AmazonServiceException exception = new AmazonServiceException(Constants.STATE_MACHINE_DOES_NOT_EXIST_ERROR_MESSAGE);
+        exception.setStatusCode(400);
+        exception.setErrorCode(Constants.STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE);
+
+        return exception;
     }
 
 }

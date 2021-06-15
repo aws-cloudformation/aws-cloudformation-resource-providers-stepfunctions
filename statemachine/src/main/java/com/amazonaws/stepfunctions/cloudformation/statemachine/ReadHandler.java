@@ -27,6 +27,8 @@ public class ReadHandler extends ResourceHandler {
         MetricsRecorder metricsRecorder = new MetricsRecorder(HandlerOperationType.READ);
 
         try {
+            verifyStateMachineArnIsPresent(model.getArn());
+
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
             DescribeStateMachineRequest describeStateMachineRequest = buildDescribeStateMachineRequestFromModel(model);
