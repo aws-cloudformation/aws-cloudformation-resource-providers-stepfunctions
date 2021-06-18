@@ -8,7 +8,6 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import software.amazon.cloudformation.resource.Serializer;
 
 public class ReadHandler extends ResourceHandler {
 
@@ -24,6 +23,8 @@ public class ReadHandler extends ResourceHandler {
         final ResourceModel model = request.getDesiredResourceState();
 
         try {
+            verifyActivityArnIsPresent(model.getArn());
+
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
             DescribeActivityRequest describeActivityRequest = new DescribeActivityRequest();

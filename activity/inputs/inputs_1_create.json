@@ -1,0 +1,9 @@
+{
+  "Name": "ContractTestActivityName",
+  "Tags": [
+    {
+      "Key": "Key1",
+      "Value": "Value1"
+    }
+  ]
+}

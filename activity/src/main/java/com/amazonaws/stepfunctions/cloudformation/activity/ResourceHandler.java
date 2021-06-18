@@ -30,7 +30,7 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
                     resultBuilder.errorCode(HandlerErrorCode.AccessDenied);
                     resultBuilder.message(amznException.getMessage());
                     resultBuilder.status(OperationStatus.FAILED);
-                } else if (Constants.ACTIVITY_DOES_NOT_EXIST_ERROR_CODE.equals(errorCode)) {
+                } else if (Constants.RESOURCE_NOT_FOUND_ERROR_CODES.contains(errorCode)) {
                     resultBuilder.errorCode(HandlerErrorCode.NotFound);
                     resultBuilder.message(amznException.getMessage());
                     resultBuilder.status(OperationStatus.FAILED);
@@ -59,6 +59,20 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
         }
 
         return resultBuilder.build();
+    }
+
+    /**
+     * Validates that the activity ARN is not null
+     * @param resourceArn The resource ARN for the activity
+     * @throws AmazonServiceException Thrown if the activity's ARN is null
+     */
+    protected void verifyActivityArnIsPresent(String resourceArn) throws AmazonServiceException {
+        if (resourceArn == null) {
+            AmazonServiceException exception = new AmazonServiceException(Constants.ACTIVITY_ARN_NOT_FOUND_MESSAGE);
+            exception.setStatusCode(400);
+            exception.setErrorCode(Constants.ACTIVITY_DOES_NOT_EXIST_ERROR_CODE);
+            throw exception;
+        }
     }
 
 }
