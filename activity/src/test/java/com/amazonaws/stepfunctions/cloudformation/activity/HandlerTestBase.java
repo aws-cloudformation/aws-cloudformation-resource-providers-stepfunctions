@@ -12,6 +12,8 @@ public abstract class HandlerTestBase {
     protected final static AmazonServiceException exception500 = new AmazonServiceException("Server error");
     protected final static AmazonServiceException exception400 = new AmazonServiceException("Client error");
     protected final static RuntimeException unknownException = new RuntimeException("Runtime error");
+    protected final static AmazonServiceException activityDoesNotExistException = new AmazonServiceException("Activity does not exist");
+    protected final static AmazonServiceException resourceNotFoundException = new AmazonServiceException("Resource does not exist");
     protected final static AmazonServiceException throttlingException = new AmazonServiceException("Your request has been throttled");
     protected final static AWSStepFunctionsException iamManagedRuleException = new AWSStepFunctionsException(
             "arn:aws:iam::000000000000:role/role' is not authorized to create managed-rule.");
@@ -25,9 +27,13 @@ public abstract class HandlerTestBase {
         exception400.setStatusCode(400);
         exception500.setStatusCode(500);
         throttlingException.setStatusCode(400);
+        activityDoesNotExistException.setStatusCode(400);
+        resourceNotFoundException.setStatusCode(400);
         throttlingException.setErrorCode("ThrottlingException");
         iamManagedRuleException.setErrorCode("AccessDeniedException");
         iamManagedRuleException.setStatusCode(400);
+        activityDoesNotExistException.setErrorCode(Constants.ACTIVITY_DOES_NOT_EXIST_ERROR_CODE);
+        resourceNotFoundException.setErrorCode(Constants.RESOURCE_NOT_FOUND_ERROR_CODE);
     }
 
     @Mock

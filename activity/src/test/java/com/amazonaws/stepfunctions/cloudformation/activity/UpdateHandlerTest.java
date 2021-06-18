@@ -13,12 +13,16 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,8 +40,16 @@ public class UpdateHandlerTest extends HandlerTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .region(REGION)
                 .awsAccountId(AWS_ACCOUNT_ID)
-                .desiredResourceState(ResourceModel.builder().arn(ACTIVITY_ARN).name(ACTIVITY_NAME).build())
-                .previousResourceState(ResourceModel.builder().arn(ACTIVITY_ARN).name(ACTIVITY_NAME).build())
+                .desiredResourceState(ResourceModel.builder()
+                        .arn(ACTIVITY_ARN)
+                        .name(ACTIVITY_NAME)
+                        .build()
+                )
+                .previousResourceState(ResourceModel.builder()
+                        .arn(ACTIVITY_ARN)
+                        .name(ACTIVITY_NAME)
+                        .build()
+                )
                 .build();
     }
 
@@ -91,6 +103,54 @@ public class UpdateHandlerTest extends HandlerTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getMessage()).isEqualTo(exception500.getMessage());
+    }
+
+    @Test
+    public void testResourceArnIsNull_returnsNotFound() {
+        request.setDesiredResourceState(ResourceModel.builder()
+                .name(ACTIVITY_NAME)
+                .build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(response.getMessage()).contains(Constants.ACTIVITY_ARN_NOT_FOUND_MESSAGE);
+    }
+
+    @Test
+    public void testResourceDoesNotExist_returnsNotFound() {
+        List<TagsEntry> previousTags = new ArrayList<>();
+        previousTags.add(new TagsEntry("K1", "V1"));
+        previousTags.add(new TagsEntry("K3", "V3"));
+
+        List<TagsEntry> currentTags = new ArrayList<>();
+        currentTags.add(new TagsEntry("K1", "V1"));
+        currentTags.add(new TagsEntry("K2", "V2"));
+        currentTags.add(new TagsEntry("K4", "V4"));
+
+        request.setPreviousResourceState(ResourceModel.builder()
+                .arn(ACTIVITY_ARN)
+                .name(ACTIVITY_NAME)
+                .tags(previousTags)
+                .build()
+        );
+        request.setDesiredResourceState(ResourceModel.builder()
+                .arn(ACTIVITY_ARN)
+                .name(ACTIVITY_NAME)
+                .tags(currentTags)
+                .build()
+        );
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(UntagResourceRequest.class), Mockito.any(Function.class))).thenThrow(resourceNotFoundException);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(response.getMessage()).isEqualTo(resourceNotFoundException.getMessage());
     }
 
 }
