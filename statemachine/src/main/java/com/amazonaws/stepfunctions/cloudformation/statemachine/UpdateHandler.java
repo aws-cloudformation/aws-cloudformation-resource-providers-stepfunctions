@@ -33,6 +33,8 @@ public class UpdateHandler extends ResourceHandler {
         metricsRecorder.setMetricsFromResourceModel(model);
 
         try {
+            verifyStateMachineArnIsPresent(model.getArn());
+
             AWSStepFunctions sfnClient = AWSStepFunctionsClientBuilder.defaultClient();
 
             validateDefinitionCount(model);
