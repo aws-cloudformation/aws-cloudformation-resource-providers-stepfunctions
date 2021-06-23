@@ -1,0 +1,14 @@
+{
+  "StateMachineName": "{{ContractTestInvalidStateMachineName}}",
+  "RoleArn": "{{ContractTestStateMachineRole}}",
+  "StateMachineType": "STANDARD",
+  "Definition": {
+    "StartAt": "Hello",
+    "States": {
+      "Hello": {
+        "Type": "Pass",
+        "End": true
+      }
+    }
+  }
+}

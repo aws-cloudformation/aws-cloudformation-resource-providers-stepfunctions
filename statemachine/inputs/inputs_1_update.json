@@ -1,0 +1,18 @@
+{
+  "StateMachineName": "{{ContractTestStateMachineName}}",
+  "RoleArn": "{{ContractTestStateMachineRole}}",
+  "StateMachineType": "STANDARD",
+  "Definition": {
+    "StartAt": "Hello",
+    "States": {
+      "Hello": {
+        "Type": "Pass",
+        "Next": "World"
+      },
+      "World": {
+        "Type": "Pass",
+        "End": true
+      }
+    }
+  }
+}

@@ -11,6 +11,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: com.amazonaws.stepfunctions.cloudformation.statemachine.HandlerWrapper::handleRequest
+      MemorySize: 256
       Runtime: java8
       CodeUri: ./target/aws-stepfunctions-statemachine-handler-1.0-SNAPSHOT.jar
 
@@ -18,5 +19,6 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: com.amazonaws.stepfunctions.cloudformation.statemachine.HandlerWrapper::testEntrypoint
+      MemorySize: 256
       Runtime: java8
       CodeUri: ./target/aws-stepfunctions-statemachine-handler-1.0-SNAPSHOT.jar
