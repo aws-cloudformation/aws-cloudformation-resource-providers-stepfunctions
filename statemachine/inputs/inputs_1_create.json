@@ -1,6 +1,6 @@
 {
-  "StateMachineName": "{{ContractTestStateMachineName}}",
-  "RoleArn": "{{ContractTestStateMachineRole}}",
+  "StateMachineName": "{{TestStateMachineName}}",
+  "RoleArn": "{{TestStateMachineRole}}",
   "StateMachineType": "STANDARD",
   "Definition": {
     "StartAt": "Hello",
