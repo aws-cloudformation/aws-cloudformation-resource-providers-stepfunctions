@@ -19,7 +19,13 @@ Resources:
                   - "s3:PutObject"
                 Resource: !Join ["/", [!GetAtt StepFunctionsS3Bucket.Arn, "*"]]
   StepFunctionsS3Bucket:
+    Description: An S3 bucket which will hold JSON and YAML state machine definitions used for canary tests
     Type: "AWS::S3::Bucket"
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
   S3PutObjectFunction:
     Type: "AWS::Lambda::Function"
     Properties:
