@@ -26,8 +26,8 @@ package.AWSCloudFormationResourceProvidersStepFunctions = {
     dependencies = {
         1.0 = {
             AWSCloudFormationRPDKJavaPlugin = 2.0;
-            AWSStepFunctionsJavaClient = 1.11.x;
-            AWSS3JavaClient = 1.11.x;
+            AWSStepFunctionsJavaClient = 1.12.x;
+            AWSS3JavaClient = 1.12.x;
             Jackson-dataformat-yaml = 2.10.x;
             Lombok = 1.18.x;
         };
@@ -44,9 +44,9 @@ package.AWSCloudFormationResourceProvidersStepFunctions = {
 
     resolves-conflict-dependencies = {
         1.0 = {
-            Jackson-annotations = 2.10.x;
-            Jackson-core = 2.10.x;
-            Jackson-databind = 2.10.x;
+            Jackson-annotations = 2.12.x;
+            Jackson-core = 2.12.x;
+            Jackson-databind = 2.12.x;
         };
     };
 
