@@ -33,9 +33,7 @@ public class DeleteHandler extends ResourceHandler {
 
             if (!currentContext.isDeletionStarted()) {
                 if (!doesStateMachineExist(model, proxy, sfnClient)) {
-                    return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                            .status(OperationStatus.SUCCESS)
-                            .build();
+                    throw getStateMachineDoesNotExistException();
                 }
 
                 deleteStateMachine(model, proxy, sfnClient);

@@ -85,7 +85,7 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
         }
     }
 
-    private AmazonServiceException getStateMachineDoesNotExistException() {
+    protected AmazonServiceException getStateMachineDoesNotExistException() {
         AmazonServiceException exception = new AmazonServiceException(Constants.STATE_MACHINE_DOES_NOT_EXIST_ERROR_MESSAGE);
         exception.setStatusCode(400);
         exception.setErrorCode(Constants.STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE);
