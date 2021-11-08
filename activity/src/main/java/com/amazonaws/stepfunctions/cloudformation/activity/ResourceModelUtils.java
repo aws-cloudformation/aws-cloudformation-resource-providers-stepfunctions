@@ -6,7 +6,7 @@ import com.amazonaws.services.stepfunctions.model.Tag;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Translator {
+public class ResourceModelUtils {
 
     /**
      * Generates a resource model containing all activity resource properties

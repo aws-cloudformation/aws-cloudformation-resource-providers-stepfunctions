@@ -1,17 +1,12 @@
 package com.amazonaws.stepfunctions.cloudformation.activity;
 
-import com.amazonaws.services.stepfunctions.model.DescribeActivityRequest;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityResult;
 import com.amazonaws.services.stepfunctions.model.ListTagsForResourceResult;
 import com.amazonaws.services.stepfunctions.model.Tag;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,7 +29,7 @@ public class TranslatorTest extends HandlerTestBase {
         ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
         listTagsForResourceResult.setTags(activityTags);
 
-        ResourceModel outputModel = Translator.getUpdatedResourceModelFromReadResults(describeActivityResult, activityTags);
+        ResourceModel outputModel = ResourceModelUtils.getUpdatedResourceModelFromReadResults(describeActivityResult, activityTags);
 
         assertThat(outputModel.getArn()).isEqualTo(ACTIVITY_ARN);
         assertThat(outputModel.getName()).isEqualTo(ACTIVITY_NAME);

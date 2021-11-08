@@ -36,7 +36,7 @@ public class ReadHandler extends ResourceHandler {
 
             List<Tag> activityTags = TaggingHelper.listTagsForResource(model.getArn(), proxy, sfnClient);
 
-            ResourceModel updatedModel = Translator.getUpdatedResourceModelFromReadResults(describeActivityResult, activityTags);
+            ResourceModel updatedModel = ResourceModelUtils.getUpdatedResourceModelFromReadResults(describeActivityResult, activityTags);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(updatedModel)
