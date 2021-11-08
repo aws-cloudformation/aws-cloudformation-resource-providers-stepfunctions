@@ -11,7 +11,6 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ReadHandler extends ResourceHandler {
 
@@ -33,19 +32,14 @@ public class ReadHandler extends ResourceHandler {
 
             DescribeActivityRequest describeActivityRequest = new DescribeActivityRequest();
             describeActivityRequest.setActivityArn(model.getArn());
-
             DescribeActivityResult describeActivityResult = proxy.injectCredentialsAndInvoke(describeActivityRequest, sfnClient::describeActivity);
 
             List<Tag> activityTags = TaggingHelper.listTagsForResource(model.getArn(), proxy, sfnClient);
 
-            model.setName(describeActivityResult.getName());
-            model.setTags(activityTags.stream().map(e -> new TagsEntry(
-                            e.getKey(),
-                            e.getValue()))
-                    .collect(Collectors.toList()));
+            ResourceModel updatedModel = Translator.getUpdatedResourceModelFromReadResults(describeActivityResult, activityTags);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(model)
+                    .resourceModel(updatedModel)
                     .status(OperationStatus.SUCCESS)
                     .build();
         } catch (Exception e) {
