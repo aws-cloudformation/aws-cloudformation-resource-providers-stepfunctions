@@ -33,10 +33,10 @@ public class ResourceModelUtils {
      * Generates a resource model containing the state machine resource's properties
      * @param describeStateMachineResult The result of calling DescribeStateMachine for the state machine
      * @param stateMachineTags A list of tags associated with the state machine
-     * @return A resource model containing the TODO
+     * @return A resource model containing the state machine resource's properties
      */
-    public static ResourceModel updateModelFromResult(final DescribeStateMachineResult describeStateMachineResult,
-                                             final List<Tag> stateMachineTags) {
+    public static ResourceModel getUpdatedResourceModelFromReadResults(final DescribeStateMachineResult describeStateMachineResult,
+                                                                       final List<Tag> stateMachineTags) {
         ResourceModel model = new ResourceModel();
 
         model.setTags(Translator.getTagsEntries(stateMachineTags));
