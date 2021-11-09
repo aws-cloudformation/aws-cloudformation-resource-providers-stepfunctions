@@ -121,6 +121,23 @@ public class ReadHandlerTest extends HandlerTestBase {
     }
 
     @Test
+    public void testReturnsFailed_whenListTagsForResourceThrows500() {
+        DescribeStateMachineResult describeStateMachineResult = new DescribeStateMachineResult();
+        describeStateMachineResult.setName(STATE_MACHINE_NAME);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class)))
+                .thenReturn(describeStateMachineResult)
+                .thenThrow(exception500);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(exception500.getMessage());
+    }
+
+    @Test
     public void testWhenArnMissing_throwsStateMachineDoesNotExist() {
         request.setDesiredResourceState(ResourceModel.builder().build());
 
