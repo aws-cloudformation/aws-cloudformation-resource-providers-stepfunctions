@@ -20,6 +20,7 @@ public abstract class HandlerTestBase {
     protected static final String LOGGING_CLOUDWATCHLOGS_LOGARN = "log-group-arn";
     protected static final Boolean TRACING_CONFIGURATION_DISABLED = false;
     protected static final Boolean TRACING_CONFIGURATION_ENABLED = true;
+    protected static final String EXPRESS_TYPE = "EXPRESS";
 
 
     protected static LoggingConfiguration createLoggingConfiguration() {

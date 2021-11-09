@@ -1,7 +1,6 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
-import com.amazonaws.services.stepfunctions.model.CloudWatchLogsLogGroup;
-import com.amazonaws.services.stepfunctions.model.LogDestination;
+import com.amazonaws.services.stepfunctions.model.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,34 +8,67 @@ import java.util.stream.Collectors;
 
 public class Translator {
 
-    public static com.amazonaws.services.stepfunctions.model.LoggingConfiguration getLoggingConfiguration(LoggingConfiguration input) {
-        com.amazonaws.services.stepfunctions.model.LoggingConfiguration result = new com.amazonaws.services.stepfunctions.model.LoggingConfiguration();
-        result.setLevel(input.getLevel());
-        result.setIncludeExecutionData(input.getIncludeExecutionData());
+    public static com.amazonaws.services.stepfunctions.model.LoggingConfiguration getLoggingConfiguration(LoggingConfiguration cfnLoggingConfiguration) {
+        com.amazonaws.services.stepfunctions.model.LoggingConfiguration sfnLoggingConfiguration = new com.amazonaws.services.stepfunctions.model.LoggingConfiguration();
+        sfnLoggingConfiguration.setLevel(cfnLoggingConfiguration.getLevel());
+        sfnLoggingConfiguration.setIncludeExecutionData(cfnLoggingConfiguration.getIncludeExecutionData());
 
-        if (input.getDestinations() != null) {
-            List<String> logGroups = input.getDestinations().stream()
-                    .map(com.amazonaws.stepfunctions.cloudformation.statemachine.LogDestination::getCloudWatchLogsLogGroup)
-                    .map(com.amazonaws.stepfunctions.cloudformation.statemachine.CloudWatchLogsLogGroup::getLogGroupArn)
+        if (cfnLoggingConfiguration.getDestinations() != null) {
+            List<String> logGroups = cfnLoggingConfiguration.getDestinations().stream()
+                    .map(LogDestination::getCloudWatchLogsLogGroup)
+                    .map(CloudWatchLogsLogGroup::getLogGroupArn)
                     .collect(Collectors.toList());
-            List<LogDestination> destinations = new ArrayList<>();
+            List<com.amazonaws.services.stepfunctions.model.LogDestination> destinations = new ArrayList<>();
             for (String logGroup : logGroups) {
-                destinations.add(new LogDestination()
-                    .withCloudWatchLogsLogGroup(new CloudWatchLogsLogGroup()
+                destinations.add(new com.amazonaws.services.stepfunctions.model.LogDestination()
+                    .withCloudWatchLogsLogGroup(new com.amazonaws.services.stepfunctions.model.CloudWatchLogsLogGroup()
                             .withLogGroupArn(logGroup))
                 );
             }
-            result.setDestinations(destinations);
+            sfnLoggingConfiguration.setDestinations(destinations);
         }
 
-        return result;
+        return sfnLoggingConfiguration;
     }
 
-    public static com.amazonaws.services.stepfunctions.model.TracingConfiguration getTracingConfiguration(TracingConfiguration input) {
+    public static LoggingConfiguration getLoggingConfiguration(com.amazonaws.services.stepfunctions.model.LoggingConfiguration sfnLoggingConfiguration) {
+        LoggingConfiguration cfnLoggingConfiguration = new LoggingConfiguration();
 
-        com.amazonaws.services.stepfunctions.model.TracingConfiguration result = new com.amazonaws.services.stepfunctions.model.TracingConfiguration();
-        result.setEnabled(input.getEnabled());
+        cfnLoggingConfiguration.setLevel(sfnLoggingConfiguration.getLevel());
+        cfnLoggingConfiguration.setIncludeExecutionData(sfnLoggingConfiguration.getIncludeExecutionData());
 
-        return result;
+        if (sfnLoggingConfiguration.getDestinations() != null) {
+            List<LogDestination> destinations = sfnLoggingConfiguration.getDestinations().stream()
+                    .map(com.amazonaws.services.stepfunctions.model.LogDestination::getCloudWatchLogsLogGroup)
+                    .map(com.amazonaws.services.stepfunctions.model.CloudWatchLogsLogGroup::getLogGroupArn)
+                    .map(logGroupArn -> new LogDestination(new CloudWatchLogsLogGroup(logGroupArn)))
+                    .collect(Collectors.toList());
+
+            cfnLoggingConfiguration.setDestinations(destinations);
+        }
+
+        return cfnLoggingConfiguration;
+    }
+
+    public static com.amazonaws.services.stepfunctions.model.TracingConfiguration getTracingConfiguration(TracingConfiguration cfnTracingConfiguration) {
+        com.amazonaws.services.stepfunctions.model.TracingConfiguration sfnTracingConfiguration = new com.amazonaws.services.stepfunctions.model.TracingConfiguration();
+        sfnTracingConfiguration.setEnabled(cfnTracingConfiguration.getEnabled());
+
+        return sfnTracingConfiguration;
+    }
+
+    public static TracingConfiguration getTracingConfiguration(com.amazonaws.services.stepfunctions.model.TracingConfiguration sfnTracingConfiguration) {
+        TracingConfiguration cfnTracingConfiguration = new TracingConfiguration();
+        cfnTracingConfiguration.setEnabled(sfnTracingConfiguration.getEnabled());
+
+        return cfnTracingConfiguration;
+    }
+
+    public static List<TagsEntry> getTagsEntries(List<Tag> stateMachineTags) {
+
+        return stateMachineTags.stream().map(e -> new TagsEntry(
+                        e.getKey(),
+                        e.getValue()))
+                .collect(Collectors.toList());
     }
 }

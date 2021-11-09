@@ -3,11 +3,14 @@ package com.amazonaws.stepfunctions.cloudformation.statemachine;
 import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.model.DescribeStateMachineRequest;
 import com.amazonaws.services.stepfunctions.model.DescribeStateMachineResult;
+import com.amazonaws.services.stepfunctions.model.Tag;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.List;
 
 import static com.amazonaws.stepfunctions.cloudformation.statemachine.ResourceModelUtils.updateModelFromResult;
 
@@ -32,12 +35,14 @@ public class ReadHandler extends ResourceHandler {
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
             DescribeStateMachineRequest describeStateMachineRequest = buildDescribeStateMachineRequestFromModel(model);
-
             DescribeStateMachineResult describeStateMachineResult = proxy.injectCredentialsAndInvoke(describeStateMachineRequest, sfnClient::describeStateMachine);
-            updateModelFromResult(model, describeStateMachineResult);
+
+            List<Tag> stateMachineTags = TaggingHelper.listTagsForResource(model.getArn(), proxy, sfnClient);
+
+            ResourceModel updatedModel = updateModelFromResult(describeStateMachineResult, stateMachineTags);
 
             ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(model)
+                    .resourceModel(updatedModel)
                     .status(OperationStatus.SUCCESS)
                     .build();
 
