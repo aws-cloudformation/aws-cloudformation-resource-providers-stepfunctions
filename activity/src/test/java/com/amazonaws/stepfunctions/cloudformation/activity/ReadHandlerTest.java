@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest extends HandlerTestBase {
 
-    private ReadHandler handler = new ReadHandler();
+    private final ReadHandler handler = new ReadHandler();
 
     private ResourceHandlerRequest<ResourceModel> request;
 
@@ -53,16 +53,18 @@ public class ReadHandlerTest extends HandlerTestBase {
         ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
         listTagsForResourceResult.setTags(activityTags);
 
-        List<TagsEntry> expectedTagEntries = new ArrayList<>();
-        expectedTagEntries.add(new TagsEntry("Key1", "Value1"));
-        expectedTagEntries.add(new TagsEntry("Key2", "Value2"));
-
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class)))
                 .thenReturn(describeActivityResult)
                 .thenReturn(listTagsForResourceResult);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
             = handler.handleRequest(proxy, request, null, logger);
+
+        List<TagsEntry> expectedTagEntries = new ArrayList<>();
+        expectedTagEntries.add(new TagsEntry("Key1", "Value1"));
+        expectedTagEntries.add(new TagsEntry("Key2", "Value2"));
+
+        ResourceModel expectedModel = new ResourceModel(ACTIVITY_ARN, ACTIVITY_NAME, expectedTagEntries);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -71,9 +73,7 @@ public class ReadHandlerTest extends HandlerTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-        assertThat(response.getResourceModel().getArn()).isEqualTo(ACTIVITY_ARN);
-        assertThat(response.getResourceModel().getName()).isEqualTo(ACTIVITY_NAME);
-        assertThat(response.getResourceModel().getTags()).isEqualTo(expectedTagEntries);
+        assertThat(response.getResourceModel()).isEqualTo(expectedModel);
     }
 
     @Test

@@ -1,7 +1,6 @@
 package com.amazonaws.stepfunctions.cloudformation.activity;
 
 import com.amazonaws.services.stepfunctions.model.DescribeActivityResult;
-import com.amazonaws.services.stepfunctions.model.ListTagsForResourceResult;
 import com.amazonaws.services.stepfunctions.model.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -10,7 +9,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TranslatorTest extends HandlerTestBase {
+public class ResourceModelUtilsTest extends HandlerTestBase {
 
     @Test
     public void testGetUpdatedResourceModelFromReadResults_returnsUpdatedModelWithAllProperties() {
@@ -22,18 +21,15 @@ public class TranslatorTest extends HandlerTestBase {
         activityTags.add(new Tag().withKey("Key1").withValue("Value1"));
         activityTags.add(new Tag().withKey("Key2").withValue("Value2"));
 
+        ResourceModel outputModel = ResourceModelUtils.getUpdatedResourceModelFromReadResults(describeActivityResult, activityTags);
+
         List<TagsEntry> expectedTagEntries = new ArrayList<>();
         expectedTagEntries.add(new TagsEntry("Key1", "Value1"));
         expectedTagEntries.add(new TagsEntry("Key2", "Value2"));
 
-        ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
-        listTagsForResourceResult.setTags(activityTags);
+        ResourceModel expectedModel = new ResourceModel(ACTIVITY_ARN, ACTIVITY_NAME, expectedTagEntries);
 
-        ResourceModel outputModel = ResourceModelUtils.getUpdatedResourceModelFromReadResults(describeActivityResult, activityTags);
-
-        assertThat(outputModel.getArn()).isEqualTo(ACTIVITY_ARN);
-        assertThat(outputModel.getName()).isEqualTo(ACTIVITY_NAME);
-        assertThat(outputModel.getTags()).isEqualTo(expectedTagEntries);
+        assertThat(outputModel).isEqualTo(expectedModel);
     }
 
 }

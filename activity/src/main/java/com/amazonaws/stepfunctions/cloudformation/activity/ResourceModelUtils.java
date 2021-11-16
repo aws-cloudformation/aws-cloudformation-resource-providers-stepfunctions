@@ -4,9 +4,13 @@ import com.amazonaws.services.stepfunctions.model.DescribeActivityResult;
 import com.amazonaws.services.stepfunctions.model.Tag;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Encapsulates the logic behind generating the ResourceModel for the request's desiredResourceState
+ */
 public class ResourceModelUtils {
+
+    private ResourceModelUtils(){}
 
     /**
      * Generates a resource model containing all activity resource properties
@@ -14,21 +18,14 @@ public class ResourceModelUtils {
      * @param activityTags A list of tags associated with the activity
      * @return A resource model containing the ARN, Name, and list of tags for the activity
      */
-    public static ResourceModel getUpdatedResourceModelFromReadResults(DescribeActivityResult describeActivityResult,
-                                                          List<Tag> activityTags) {
+    public static ResourceModel getUpdatedResourceModelFromReadResults(final DescribeActivityResult describeActivityResult,
+                                                                       final List<Tag> activityTags) {
         ResourceModel model = new ResourceModel();
 
         model.setArn(describeActivityResult.getActivityArn());
         model.setName(describeActivityResult.getName());
-        model.setTags(getTagsEntriesFromTags(activityTags));
+        model.setTags(Translator.getTagsEntriesFromTags(activityTags));
 
         return model;
-    }
-
-    private static List<TagsEntry> getTagsEntriesFromTags(List<Tag> activityTags) {
-        return activityTags.stream().map(e -> new TagsEntry(
-                        e.getKey(),
-                        e.getValue()))
-                .collect(Collectors.toList());
     }
 }
