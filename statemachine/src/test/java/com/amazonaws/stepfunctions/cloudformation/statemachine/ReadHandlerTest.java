@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest extends HandlerTestBase {
 
-    private ReadHandler handler = new ReadHandler();
+    private final ReadHandler handler = new ReadHandler();
 
     private final ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
     private ResourceHandlerRequest<ResourceModel> request;
@@ -62,16 +62,30 @@ public class ReadHandlerTest extends HandlerTestBase {
         ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
         listTagsForResourceResult.setTags(stateMachineTags);
 
-        List<TagsEntry> expectedTagEntries = new ArrayList<>();
-        expectedTagEntries.add(new TagsEntry("Key1", "Value1"));
-        expectedTagEntries.add(new TagsEntry("Key2", "Value2"));
-
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class)))
                 .thenReturn(describeStateMachineResult)
                 .thenReturn(listTagsForResourceResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
             = handler.handleRequest(proxy, request, null, logger);
+
+        List<TagsEntry> expectedTagEntries = new ArrayList<>();
+        expectedTagEntries.add(new TagsEntry("Key1", "Value1"));
+        expectedTagEntries.add(new TagsEntry("Key2", "Value2"));
+
+        ResourceModel expectedModel = new ResourceModel(
+                STATE_MACHINE_ARN,
+                STATE_MACHINE_NAME,
+                DEFINITION,
+                ROLE_ARN,
+                STATE_MACHINE_NAME,
+                EXPRESS_TYPE,
+                loggingConfiguration,
+                tracingConfiguration,
+                null,
+                null,
+                null,
+                expectedTagEntries);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -80,37 +94,13 @@ public class ReadHandlerTest extends HandlerTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-
-        ResourceModel resourceModel = response.getResourceModel();
-
-        assertThat(resourceModel.getTags()).isEqualTo(expectedTagEntries);
-        assertThat(resourceModel.getArn()).isEqualTo(STATE_MACHINE_ARN);
-        assertThat(resourceModel.getName()).isEqualTo(STATE_MACHINE_NAME);
-        assertThat(resourceModel.getDefinitionString()).isEqualTo(DEFINITION);
-        assertThat(resourceModel.getRoleArn()).isEqualTo(ROLE_ARN);
-        assertThat(resourceModel.getStateMachineName()).isEqualTo(STATE_MACHINE_NAME);
-        assertThat(resourceModel.getStateMachineType()).isEqualTo(EXPRESS_TYPE);
-
-        LoggingConfiguration modelLoggingConfiguration = resourceModel.getLoggingConfiguration();
-        assertThat(modelLoggingConfiguration.getIncludeExecutionData())
-                .isEqualTo(loggingConfiguration.getIncludeExecutionData());
-        assertThat(modelLoggingConfiguration.getLevel()).isEqualTo(loggingConfiguration.getLevel());
-
-        List<LogDestination> modelLogDestinations = modelLoggingConfiguration.getDestinations();
-        assertThat(modelLogDestinations.size())
-                .isEqualTo(loggingConfiguration.getDestinations().size());
-        for (int i=0; i<modelLogDestinations.size(); i++) {
-            assertThat(modelLogDestinations.get(i).getCloudWatchLogsLogGroup().getLogGroupArn())
-                    .isEqualTo(loggingConfiguration.getDestinations().get(i).getCloudWatchLogsLogGroup().getLogGroupArn());
-        }
-
-        TracingConfiguration modelTracingConfiguration = resourceModel.getTracingConfiguration();
-        assertThat(modelTracingConfiguration.getEnabled()).isEqualTo(tracingConfiguration.getEnabled());
+        assertThat(response.getResourceModel()).isEqualTo(expectedModel);
     }
 
     @Test
     public void testReturnsFailed_whenDescribeStateMachineThrows500() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeStateMachineRequest.class),
+                Mockito.any(Function.class))).thenThrow(exception500);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -205,7 +195,8 @@ public class ReadHandlerTest extends HandlerTestBase {
 
     @Test
     public void testLogsCorrectOperationStatus_Failure() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeStateMachineRequest.class),
+                Mockito.any(Function.class))).thenThrow(exception500);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);

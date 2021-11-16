@@ -33,11 +33,13 @@ public class ReadHandler extends ResourceHandler {
             AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
             DescribeStateMachineRequest describeStateMachineRequest = buildDescribeStateMachineRequestFromModel(model);
-            DescribeStateMachineResult describeStateMachineResult = proxy.injectCredentialsAndInvoke(describeStateMachineRequest, sfnClient::describeStateMachine);
+            DescribeStateMachineResult describeStateMachineResult = proxy.injectCredentialsAndInvoke(
+                    describeStateMachineRequest, sfnClient::describeStateMachine);
 
             List<Tag> stateMachineTags = TaggingHelper.listTagsForResource(model.getArn(), proxy, sfnClient);
 
-            ResourceModel updatedModel = ResourceModelUtils.getUpdatedResourceModelFromReadResults(describeStateMachineResult, stateMachineTags);
+            ResourceModel updatedModel = ResourceModelUtils.getUpdatedResourceModelFromReadResults(
+                    describeStateMachineResult, stateMachineTags);
 
             ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(updatedModel)

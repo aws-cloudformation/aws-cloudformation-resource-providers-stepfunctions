@@ -8,7 +8,9 @@ import java.util.stream.Collectors;
 
 public class Translator {
 
-    public static com.amazonaws.services.stepfunctions.model.LoggingConfiguration getLoggingConfiguration(LoggingConfiguration cfnLoggingConfiguration) {
+    private Translator() {}
+
+    public static com.amazonaws.services.stepfunctions.model.LoggingConfiguration getLoggingConfiguration(final LoggingConfiguration cfnLoggingConfiguration) {
         com.amazonaws.services.stepfunctions.model.LoggingConfiguration sfnLoggingConfiguration = new com.amazonaws.services.stepfunctions.model.LoggingConfiguration();
         sfnLoggingConfiguration.setLevel(cfnLoggingConfiguration.getLevel());
         sfnLoggingConfiguration.setIncludeExecutionData(cfnLoggingConfiguration.getIncludeExecutionData());
@@ -31,7 +33,7 @@ public class Translator {
         return sfnLoggingConfiguration;
     }
 
-    public static LoggingConfiguration getLoggingConfiguration(com.amazonaws.services.stepfunctions.model.LoggingConfiguration sfnLoggingConfiguration) {
+    public static LoggingConfiguration getLoggingConfiguration(final com.amazonaws.services.stepfunctions.model.LoggingConfiguration sfnLoggingConfiguration) {
         LoggingConfiguration cfnLoggingConfiguration = new LoggingConfiguration();
 
         cfnLoggingConfiguration.setLevel(sfnLoggingConfiguration.getLevel());
@@ -50,22 +52,21 @@ public class Translator {
         return cfnLoggingConfiguration;
     }
 
-    public static com.amazonaws.services.stepfunctions.model.TracingConfiguration getTracingConfiguration(TracingConfiguration cfnTracingConfiguration) {
+    public static com.amazonaws.services.stepfunctions.model.TracingConfiguration getTracingConfiguration(final TracingConfiguration cfnTracingConfiguration) {
         com.amazonaws.services.stepfunctions.model.TracingConfiguration sfnTracingConfiguration = new com.amazonaws.services.stepfunctions.model.TracingConfiguration();
         sfnTracingConfiguration.setEnabled(cfnTracingConfiguration.getEnabled());
 
         return sfnTracingConfiguration;
     }
 
-    public static TracingConfiguration getTracingConfiguration(com.amazonaws.services.stepfunctions.model.TracingConfiguration sfnTracingConfiguration) {
+    public static TracingConfiguration getTracingConfiguration(final com.amazonaws.services.stepfunctions.model.TracingConfiguration sfnTracingConfiguration) {
         TracingConfiguration cfnTracingConfiguration = new TracingConfiguration();
         cfnTracingConfiguration.setEnabled(sfnTracingConfiguration.getEnabled());
 
         return cfnTracingConfiguration;
     }
 
-    public static List<TagsEntry> getTagsEntries(List<Tag> stateMachineTags) {
-
+    public static List<TagsEntry> getTagsEntries(final List<Tag> stateMachineTags) {
         return stateMachineTags.stream().map(e -> new TagsEntry(
                         e.getKey(),
                         e.getValue()))

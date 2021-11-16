@@ -15,11 +15,15 @@ import java.util.List;
  */
 public class ResourceModelUtils {
 
+    private ResourceModelUtils() {}
+
     // Auto-generate a state machine name if one is not provided in the template.
-    public static void processStateMachineName(final ResourceHandlerRequest<ResourceModel> request, final ResourceModel model) {
+    public static void processStateMachineName(final ResourceHandlerRequest<ResourceModel> request,
+                                               final ResourceModel model) {
         if (model.getStateMachineName() == null) {
             final String generatedName = IdentifierUtils.generateResourceIdentifier(
-                    request.getLogicalResourceIdentifier(), request.getClientRequestToken(), Constants.STATE_MACHINE_NAME_MAXLEN);
+                    request.getLogicalResourceIdentifier(), request.getClientRequestToken(),
+                    Constants.STATE_MACHINE_NAME_MAXLEN);
 
             model.setStateMachineName(generatedName);
         }
@@ -35,8 +39,9 @@ public class ResourceModelUtils {
      * @param stateMachineTags A list of tags associated with the state machine
      * @return A resource model containing the state machine resource's properties
      */
-    public static ResourceModel getUpdatedResourceModelFromReadResults(final DescribeStateMachineResult describeStateMachineResult,
-                                                                       final List<Tag> stateMachineTags) {
+    public static ResourceModel getUpdatedResourceModelFromReadResults(
+            final DescribeStateMachineResult describeStateMachineResult,
+            final List<Tag> stateMachineTags) {
         ResourceModel model = new ResourceModel();
 
         model.setTags(Translator.getTagsEntries(stateMachineTags));
