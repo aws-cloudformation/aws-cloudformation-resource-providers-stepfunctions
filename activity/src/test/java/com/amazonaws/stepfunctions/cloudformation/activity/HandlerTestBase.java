@@ -20,11 +20,11 @@ public abstract class HandlerTestBase {
             new AmazonServiceException("Your request has been throttled");
     protected final static AWSStepFunctionsException iamManagedRuleException = new AWSStepFunctionsException(
             "arn:aws:iam::000000000000:role/role' is not authorized to create managed-rule.");
+    protected final static AmazonServiceException accessDeniedException = new AmazonServiceException("");
     protected final static String AWS_ACCOUNT_ID = "1234567890";
     protected final static String REGION = "us-east-1";
     protected final static String ACTIVITY_NAME = "TestActivity";
     protected final static String ACTIVITY_ARN = "arn:aws:states:us-east-1:1234567890:activity:TestActivity";
-    protected static AmazonServiceException accessDeniedException = new AmazonServiceException("");
 
     static {
         exception400.setStatusCode(400);
