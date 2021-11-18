@@ -15,6 +15,9 @@ public class Translator {
     private Translator() {
     }
 
+    /**
+     * Converts a CloudFormation resource model logging configuration to a Step Functions model logging configuration
+     */
     public static com.amazonaws.services.stepfunctions.model.LoggingConfiguration getLoggingConfiguration(
             final LoggingConfiguration cfnLoggingConfiguration) {
         final com.amazonaws.services.stepfunctions.model.LoggingConfiguration sfnLoggingConfiguration =
@@ -41,6 +44,9 @@ public class Translator {
         return sfnLoggingConfiguration;
     }
 
+    /**
+     * Converts a Step Functions model logging configuration to a CloudFormation resource model logging configuration
+     */
     public static LoggingConfiguration getLoggingConfiguration(
             final com.amazonaws.services.stepfunctions.model.LoggingConfiguration sfnLoggingConfiguration) {
         final LoggingConfiguration cfnLoggingConfiguration = new LoggingConfiguration();
@@ -61,6 +67,9 @@ public class Translator {
         return cfnLoggingConfiguration;
     }
 
+    /**
+     * Converts a CloudFormation resource model tracing configuration to a Step Functions model tracing configuration
+     */
     public static com.amazonaws.services.stepfunctions.model.TracingConfiguration getTracingConfiguration(
             final TracingConfiguration cfnTracingConfiguration) {
         final com.amazonaws.services.stepfunctions.model.TracingConfiguration sfnTracingConfiguration =
@@ -70,6 +79,9 @@ public class Translator {
         return sfnTracingConfiguration;
     }
 
+    /**
+     * Converts a Step Functions model tracing configuration to a CloudFormation resource model tracing configuration
+     */
     public static TracingConfiguration getTracingConfiguration(
             final com.amazonaws.services.stepfunctions.model.TracingConfiguration sfnTracingConfiguration) {
         final TracingConfiguration cfnTracingConfiguration = new TracingConfiguration();
@@ -79,8 +91,7 @@ public class Translator {
     }
 
     /**
-     * Converts a list of Step Functions model tags to a list of CloudFormation
-     * resource model tag entries
+     * Converts a list of Step Functions model tags to a list of CloudFormation resource model tag entries
      */
     public static List<TagsEntry> getTagsEntries(final List<Tag> stateMachineTags) {
         return stateMachineTags.stream().map(e -> new TagsEntry(
