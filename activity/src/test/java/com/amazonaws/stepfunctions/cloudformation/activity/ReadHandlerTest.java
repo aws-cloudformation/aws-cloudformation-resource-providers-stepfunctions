@@ -1,6 +1,5 @@
 package com.amazonaws.stepfunctions.cloudformation.activity;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityRequest;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityResult;
 import com.amazonaws.services.stepfunctions.model.ListTagsForResourceResult;
@@ -95,9 +94,6 @@ public class ReadHandlerTest extends HandlerTestBase {
         final DescribeActivityResult describeActivityResult = new DescribeActivityResult();
         describeActivityResult.setName(ACTIVITY_NAME);
         describeActivityResult.setActivityArn(ACTIVITY_ARN);
-
-        final AmazonServiceException accessDeniedException = new AmazonServiceException("");
-        accessDeniedException.setErrorCode(Constants.ACCESS_DENIED_ERROR_CODE);
 
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class)))
                 .thenReturn(describeActivityResult)
