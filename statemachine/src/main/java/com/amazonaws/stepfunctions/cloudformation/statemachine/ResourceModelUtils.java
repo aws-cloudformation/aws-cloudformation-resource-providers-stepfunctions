@@ -15,7 +15,8 @@ import java.util.List;
  */
 public class ResourceModelUtils {
 
-    private ResourceModelUtils() {}
+    private ResourceModelUtils() {
+    }
 
     // Auto-generate a state machine name if one is not provided in the template.
     public static void processStateMachineName(final ResourceHandlerRequest<ResourceModel> request,
@@ -35,32 +36,35 @@ public class ResourceModelUtils {
 
     /**
      * Generates a resource model containing the state machine resource's properties
+     *
      * @param describeStateMachineResult The result of calling DescribeStateMachine for the state machine
-     * @param stateMachineTags A list of tags associated with the state machine
+     * @param stateMachineTags           A list of tags associated with the state machine
      * @return A resource model containing the state machine resource's properties
      */
     public static ResourceModel getUpdatedResourceModelFromReadResults(
             final DescribeStateMachineResult describeStateMachineResult,
             final List<Tag> stateMachineTags) {
-        ResourceModel model = new ResourceModel();
+        final ResourceModel model = ResourceModel.builder()
+                .arn(describeStateMachineResult.getStateMachineArn())
+                .name(describeStateMachineResult.getName())
+                .definitionString(describeStateMachineResult.getDefinition())
+                .roleArn(describeStateMachineResult.getRoleArn())
+                .stateMachineName(describeStateMachineResult.getName())
+                .stateMachineType(describeStateMachineResult.getType())
+                .build();
 
-        model.setTags(Translator.getTagsEntries(stateMachineTags));
-
-        model.setArn(describeStateMachineResult.getStateMachineArn());
-        model.setName(describeStateMachineResult.getName());
-        model.setDefinitionString(describeStateMachineResult.getDefinition());
-        model.setRoleArn(describeStateMachineResult.getRoleArn());
-        model.setStateMachineName(describeStateMachineResult.getName());
-        model.setStateMachineType(describeStateMachineResult.getType());
-
-        LoggingConfiguration loggingConfiguration = describeStateMachineResult.getLoggingConfiguration();
+        final LoggingConfiguration loggingConfiguration = describeStateMachineResult.getLoggingConfiguration();
         if (loggingConfiguration != null) {
             model.setLoggingConfiguration(Translator.getLoggingConfiguration(loggingConfiguration));
         }
 
-        TracingConfiguration tracingConfiguration = describeStateMachineResult.getTracingConfiguration();
+        final TracingConfiguration tracingConfiguration = describeStateMachineResult.getTracingConfiguration();
         if (tracingConfiguration != null) {
             model.setTracingConfiguration(Translator.getTracingConfiguration(tracingConfiguration));
+        }
+
+        if (stateMachineTags != null) {
+            model.setTags(Translator.getTagsEntries(stateMachineTags));
         }
 
         return model;

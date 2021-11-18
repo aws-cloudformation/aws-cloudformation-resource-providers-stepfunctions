@@ -1,5 +1,6 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.model.DescribeStateMachineRequest;
 import com.amazonaws.services.stepfunctions.model.DescribeStateMachineResult;
@@ -14,6 +15,13 @@ import java.util.List;
 
 public class ReadHandler extends ResourceHandler {
 
+    private static DescribeStateMachineRequest buildDescribeStateMachineRequestFromModel(final ResourceModel model) {
+        final DescribeStateMachineRequest describeStateMachineRequest = new DescribeStateMachineRequest();
+        describeStateMachineRequest.setStateMachineArn(model.getArn());
+
+        return describeStateMachineRequest;
+    }
+
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -25,44 +33,50 @@ public class ReadHandler extends ResourceHandler {
 
         final ResourceModel model = request.getDesiredResourceState();
 
-        MetricsRecorder metricsRecorder = new MetricsRecorder(HandlerOperationType.READ);
+        final MetricsRecorder metricsRecorder = new MetricsRecorder(HandlerOperationType.READ);
 
         try {
             verifyStateMachineArnIsPresent(model.getArn());
 
-            AWSStepFunctions sfnClient = ClientBuilder.getClient();
+            final AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
-            DescribeStateMachineRequest describeStateMachineRequest = buildDescribeStateMachineRequestFromModel(model);
-            DescribeStateMachineResult describeStateMachineResult = proxy.injectCredentialsAndInvoke(
-                    describeStateMachineRequest, sfnClient::describeStateMachine);
+            final DescribeStateMachineRequest describeStateMachineRequest =
+                    buildDescribeStateMachineRequestFromModel(model);
+            final DescribeStateMachineResult describeStateMachineResult =
+                    proxy.injectCredentialsAndInvoke(describeStateMachineRequest, sfnClient::describeStateMachine);
 
-            List<Tag> stateMachineTags = TaggingHelper.listTagsForResource(model.getArn(), proxy, sfnClient);
+            List<Tag> stateMachineTags = null;
+            try {
+                stateMachineTags = TaggingHelper.listTagsForResource(model.getArn(), proxy, sfnClient);
+            } catch (final AmazonServiceException e) {
+                // To provide backwards compatibility, do not fail the request if ListTagsForResource
+                // permissions are not present
+                if (!Constants.ACCESS_DENIED_ERROR_CODE.equals(e.getErrorCode())) {
+                    throw e;
+                }
 
-            ResourceModel updatedModel = ResourceModelUtils.getUpdatedResourceModelFromReadResults(
+                logger.log("INFO ListTagsForResource permission not present, excluding tags from resource model");
+            }
+
+            final ResourceModel updatedModel = ResourceModelUtils.getUpdatedResourceModelFromReadResults(
                     describeStateMachineResult, stateMachineTags);
 
-            ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(updatedModel)
-                    .status(OperationStatus.SUCCESS)
-                    .build();
+            final ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                    ProgressEvent.<ResourceModel, CallbackContext>builder()
+                            .resourceModel(updatedModel)
+                            .status(OperationStatus.SUCCESS)
+                            .build();
 
             metricsRecorder.setOperationSuccessful(true);
 
             return progressEvent;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             logger.log("ERROR Reading StateMachine, caused by " + e.toString());
 
             return handleDefaultError(request, e, metricsRecorder);
         } finally {
             logger.log(metricsRecorder.generateMetricsString());
         }
-    }
-
-    private DescribeStateMachineRequest buildDescribeStateMachineRequestFromModel(ResourceModel model) {
-        DescribeStateMachineRequest describeStateMachineRequest = new DescribeStateMachineRequest();
-        describeStateMachineRequest.setStateMachineArn(model.getArn());
-
-        return describeStateMachineRequest;
     }
 
 }
