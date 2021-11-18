@@ -10,21 +10,26 @@ import java.util.List;
  */
 public class ResourceModelUtils {
 
-    private ResourceModelUtils(){}
+    private ResourceModelUtils() {
+    }
 
     /**
      * Generates a resource model containing all activity resource properties
+     *
      * @param describeActivityResult The result of calling DescribeActivity for the activity
-     * @param activityTags A list of tags associated with the activity
+     * @param activityTags           A list of tags associated with the activity
      * @return A resource model containing the ARN, Name, and list of tags for the activity
      */
     public static ResourceModel getUpdatedResourceModelFromReadResults(final DescribeActivityResult describeActivityResult,
                                                                        final List<Tag> activityTags) {
-        ResourceModel model = new ResourceModel();
+        final ResourceModel model = ResourceModel.builder()
+                .arn(describeActivityResult.getActivityArn())
+                .name(describeActivityResult.getName())
+                .build();
 
-        model.setArn(describeActivityResult.getActivityArn());
-        model.setName(describeActivityResult.getName());
-        model.setTags(Translator.getTagsEntriesFromTags(activityTags));
+        if (activityTags != null) {
+            model.setTags(Translator.getTagsEntriesFromTags(activityTags));
+        }
 
         return model;
     }

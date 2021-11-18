@@ -1,5 +1,6 @@
 package com.amazonaws.stepfunctions.cloudformation.activity;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityRequest;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityResult;
 import com.amazonaws.services.stepfunctions.model.ListTagsForResourceResult;
@@ -42,15 +43,15 @@ public class ReadHandlerTest extends HandlerTestBase {
 
     @Test
     public void testSuccess() {
-        DescribeActivityResult describeActivityResult = new DescribeActivityResult();
+        final DescribeActivityResult describeActivityResult = new DescribeActivityResult();
         describeActivityResult.setName(ACTIVITY_NAME);
         describeActivityResult.setActivityArn(ACTIVITY_ARN);
 
-        List<Tag> activityTags = new ArrayList<>();
+        final List<Tag> activityTags = new ArrayList<>();
         activityTags.add(new Tag().withKey("Key1").withValue("Value1"));
         activityTags.add(new Tag().withKey("Key2").withValue("Value2"));
 
-        ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
+        final ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
         listTagsForResourceResult.setTags(activityTags);
 
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class)))
@@ -58,13 +59,13 @@ public class ReadHandlerTest extends HandlerTestBase {
                 .thenReturn(listTagsForResourceResult);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-            = handler.handleRequest(proxy, request, null, logger);
+                = handler.handleRequest(proxy, request, null, logger);
 
-        List<TagsEntry> expectedTagEntries = new ArrayList<>();
+        final List<TagsEntry> expectedTagEntries = new ArrayList<>();
         expectedTagEntries.add(new TagsEntry("Key1", "Value1"));
         expectedTagEntries.add(new TagsEntry("Key2", "Value2"));
 
-        ResourceModel expectedModel = new ResourceModel(ACTIVITY_ARN, ACTIVITY_NAME, expectedTagEntries);
+        final ResourceModel expectedModel = new ResourceModel(ACTIVITY_ARN, ACTIVITY_NAME, expectedTagEntries);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -78,7 +79,8 @@ public class ReadHandlerTest extends HandlerTestBase {
 
     @Test
     public void testReturnsFailed_whenDescribeActivityThrows500() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class),
+                Mockito.any(Function.class))).thenThrow(exception500);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -89,8 +91,31 @@ public class ReadHandlerTest extends HandlerTestBase {
     }
 
     @Test
+    public void testRedactsTags_whenListTagsForResourceThrowsAccessDenied() {
+        final DescribeActivityResult describeActivityResult = new DescribeActivityResult();
+        describeActivityResult.setName(ACTIVITY_NAME);
+        describeActivityResult.setActivityArn(ACTIVITY_ARN);
+
+        final AmazonServiceException accessDeniedException = new AmazonServiceException("");
+        accessDeniedException.setErrorCode(Constants.ACCESS_DENIED_ERROR_CODE);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class)))
+                .thenReturn(describeActivityResult)
+                .thenThrow(accessDeniedException);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        final ResourceModel expectedModel = new ResourceModel(ACTIVITY_ARN, ACTIVITY_NAME, null);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+    }
+
+    @Test
     public void testReturnsFailed_whenListTagsForResourceThrows500() {
-        DescribeActivityResult describeActivityResult = new DescribeActivityResult();
+        final DescribeActivityResult describeActivityResult = new DescribeActivityResult();
         describeActivityResult.setName(ACTIVITY_NAME);
         describeActivityResult.setActivityArn(ACTIVITY_ARN);
 

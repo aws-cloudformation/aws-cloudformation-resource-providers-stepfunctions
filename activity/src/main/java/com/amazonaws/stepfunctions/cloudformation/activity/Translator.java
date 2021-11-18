@@ -11,7 +11,8 @@ import java.util.stream.Collectors;
  */
 public class Translator {
 
-    private Translator() {}
+    private Translator() {
+    }
 
     /**
      * Converts a list of Step Functions model tags to a list of CloudFormation

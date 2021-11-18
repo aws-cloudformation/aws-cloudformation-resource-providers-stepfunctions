@@ -1,5 +1,6 @@
 package com.amazonaws.stepfunctions.cloudformation.activity;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityRequest;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityResult;
@@ -16,10 +17,10 @@ public class ReadHandler extends ResourceHandler {
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-        final AmazonWebServicesClientProxy proxy,
-        final ResourceHandlerRequest<ResourceModel> request,
-        final CallbackContext callbackContext,
-        final Logger logger) {
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final Logger logger) {
 
         logger.log("INFO Activity ReadHandler with clientRequestToken: " + request.getClientRequestToken());
 
@@ -28,21 +29,34 @@ public class ReadHandler extends ResourceHandler {
         try {
             verifyActivityArnIsPresent(model.getArn());
 
-            AWSStepFunctions sfnClient = ClientBuilder.getClient();
+            final AWSStepFunctions sfnClient = ClientBuilder.getClient();
 
-            DescribeActivityRequest describeActivityRequest = new DescribeActivityRequest();
-            describeActivityRequest.setActivityArn(model.getArn());
-            DescribeActivityResult describeActivityResult = proxy.injectCredentialsAndInvoke(describeActivityRequest, sfnClient::describeActivity);
+            final DescribeActivityRequest describeActivityRequest = new DescribeActivityRequest()
+                    .withActivityArn(model.getArn());
+            final DescribeActivityResult describeActivityResult =
+                    proxy.injectCredentialsAndInvoke(describeActivityRequest, sfnClient::describeActivity);
 
-            List<Tag> activityTags = TaggingHelper.listTagsForResource(model.getArn(), proxy, sfnClient);
+            List<Tag> activityTags = null;
+            try {
+                activityTags = TaggingHelper.listTagsForResource(model.getArn(), proxy, sfnClient);
+            } catch (final AmazonServiceException e) {
+                // To provide backwards compatibility, do not fail the request if ListTagsForResource
+                // permissions are not present
+                if (!Constants.ACCESS_DENIED_ERROR_CODE.equals(e.getErrorCode())) {
+                    throw e;
+                }
 
-            ResourceModel updatedModel = ResourceModelUtils.getUpdatedResourceModelFromReadResults(describeActivityResult, activityTags);
+                logger.log("INFO ListTagsForResource permission not present, excluding tags from resource model");
+            }
+
+            final ResourceModel updatedModel =
+                    ResourceModelUtils.getUpdatedResourceModelFromReadResults(describeActivityResult, activityTags);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(updatedModel)
                     .status(OperationStatus.SUCCESS)
                     .build();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             logger.log("ERROR Reading Activity, caused by " + e.toString());
             return handleDefaultError(request, e);
         }
