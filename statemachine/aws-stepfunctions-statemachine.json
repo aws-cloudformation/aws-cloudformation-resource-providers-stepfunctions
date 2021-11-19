@@ -191,7 +191,8 @@
     },
     "read": {
       "permissions": [
-        "states:DescribeStateMachine"
+        "states:DescribeStateMachine",
+        "states:ListTagsForResource"
       ]
     },
     "update": {

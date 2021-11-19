@@ -1,42 +1,102 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
-import com.amazonaws.services.stepfunctions.model.CloudWatchLogsLogGroup;
-import com.amazonaws.services.stepfunctions.model.LogDestination;
+import com.amazonaws.services.stepfunctions.model.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Encapsulates the logic behind converting between CloudFormation resource
+ * model properties and Step Functions model properties
+ */
 public class Translator {
 
-    public static com.amazonaws.services.stepfunctions.model.LoggingConfiguration getLoggingConfiguration(LoggingConfiguration input) {
-        com.amazonaws.services.stepfunctions.model.LoggingConfiguration result = new com.amazonaws.services.stepfunctions.model.LoggingConfiguration();
-        result.setLevel(input.getLevel());
-        result.setIncludeExecutionData(input.getIncludeExecutionData());
-
-        if (input.getDestinations() != null) {
-            List<String> logGroups = input.getDestinations().stream()
-                    .map(com.amazonaws.stepfunctions.cloudformation.statemachine.LogDestination::getCloudWatchLogsLogGroup)
-                    .map(com.amazonaws.stepfunctions.cloudformation.statemachine.CloudWatchLogsLogGroup::getLogGroupArn)
-                    .collect(Collectors.toList());
-            List<LogDestination> destinations = new ArrayList<>();
-            for (String logGroup : logGroups) {
-                destinations.add(new LogDestination()
-                    .withCloudWatchLogsLogGroup(new CloudWatchLogsLogGroup()
-                            .withLogGroupArn(logGroup))
-                );
-            }
-            result.setDestinations(destinations);
-        }
-
-        return result;
+    private Translator() {
     }
 
-    public static com.amazonaws.services.stepfunctions.model.TracingConfiguration getTracingConfiguration(TracingConfiguration input) {
+    /**
+     * Converts a CloudFormation resource model logging configuration to a Step Functions model logging configuration
+     */
+    public static com.amazonaws.services.stepfunctions.model.LoggingConfiguration getLoggingConfiguration(
+            final LoggingConfiguration cfnLoggingConfiguration) {
+        final com.amazonaws.services.stepfunctions.model.LoggingConfiguration sfnLoggingConfiguration =
+                new com.amazonaws.services.stepfunctions.model.LoggingConfiguration();
+        sfnLoggingConfiguration.setLevel(cfnLoggingConfiguration.getLevel());
+        sfnLoggingConfiguration.setIncludeExecutionData(cfnLoggingConfiguration.getIncludeExecutionData());
 
-        com.amazonaws.services.stepfunctions.model.TracingConfiguration result = new com.amazonaws.services.stepfunctions.model.TracingConfiguration();
-        result.setEnabled(input.getEnabled());
+        if (cfnLoggingConfiguration.getDestinations() != null) {
+            final List<String> logGroups = cfnLoggingConfiguration.getDestinations().stream()
+                    .map(LogDestination::getCloudWatchLogsLogGroup)
+                    .map(CloudWatchLogsLogGroup::getLogGroupArn)
+                    .collect(Collectors.toList());
+            final List<com.amazonaws.services.stepfunctions.model.LogDestination> destinations = new ArrayList<>();
+            for (final String logGroup : logGroups) {
+                destinations.add(new com.amazonaws.services.stepfunctions.model.LogDestination()
+                        .withCloudWatchLogsLogGroup(
+                                new com.amazonaws.services.stepfunctions.model.CloudWatchLogsLogGroup()
+                                        .withLogGroupArn(logGroup))
+                );
+            }
+            sfnLoggingConfiguration.setDestinations(destinations);
+        }
 
-        return result;
+        return sfnLoggingConfiguration;
+    }
+
+    /**
+     * Converts a Step Functions model logging configuration to a CloudFormation resource model logging configuration
+     */
+    public static LoggingConfiguration getLoggingConfiguration(
+            final com.amazonaws.services.stepfunctions.model.LoggingConfiguration sfnLoggingConfiguration) {
+        final LoggingConfiguration cfnLoggingConfiguration = new LoggingConfiguration();
+
+        cfnLoggingConfiguration.setLevel(sfnLoggingConfiguration.getLevel());
+        cfnLoggingConfiguration.setIncludeExecutionData(sfnLoggingConfiguration.getIncludeExecutionData());
+
+        if (sfnLoggingConfiguration.getDestinations() != null) {
+            final List<LogDestination> destinations = sfnLoggingConfiguration.getDestinations().stream()
+                    .map(com.amazonaws.services.stepfunctions.model.LogDestination::getCloudWatchLogsLogGroup)
+                    .map(com.amazonaws.services.stepfunctions.model.CloudWatchLogsLogGroup::getLogGroupArn)
+                    .map(logGroupArn -> new LogDestination(new CloudWatchLogsLogGroup(logGroupArn)))
+                    .collect(Collectors.toList());
+
+            cfnLoggingConfiguration.setDestinations(destinations);
+        }
+
+        return cfnLoggingConfiguration;
+    }
+
+    /**
+     * Converts a CloudFormation resource model tracing configuration to a Step Functions model tracing configuration
+     */
+    public static com.amazonaws.services.stepfunctions.model.TracingConfiguration getTracingConfiguration(
+            final TracingConfiguration cfnTracingConfiguration) {
+        final com.amazonaws.services.stepfunctions.model.TracingConfiguration sfnTracingConfiguration =
+                new com.amazonaws.services.stepfunctions.model.TracingConfiguration();
+        sfnTracingConfiguration.setEnabled(cfnTracingConfiguration.getEnabled());
+
+        return sfnTracingConfiguration;
+    }
+
+    /**
+     * Converts a Step Functions model tracing configuration to a CloudFormation resource model tracing configuration
+     */
+    public static TracingConfiguration getTracingConfiguration(
+            final com.amazonaws.services.stepfunctions.model.TracingConfiguration sfnTracingConfiguration) {
+        final TracingConfiguration cfnTracingConfiguration = new TracingConfiguration();
+        cfnTracingConfiguration.setEnabled(sfnTracingConfiguration.getEnabled());
+
+        return cfnTracingConfiguration;
+    }
+
+    /**
+     * Converts a list of Step Functions model tags to a list of CloudFormation resource model tag entries
+     */
+    public static List<TagsEntry> getTagsEntries(final List<Tag> stateMachineTags) {
+        return stateMachineTags.stream().map(e -> new TagsEntry(
+                        e.getKey(),
+                        e.getValue()))
+                .collect(Collectors.toList());
     }
 }
