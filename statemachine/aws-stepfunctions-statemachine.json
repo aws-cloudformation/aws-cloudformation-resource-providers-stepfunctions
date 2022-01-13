@@ -188,6 +188,11 @@
     "/properties/StateMachineName",
     "/properties/StateMachineType"
   ],
+  "writeOnlyProperties": [
+    "/properties/Definition",
+    "/properties/DefinitionS3Location",
+    "/properties/DefinitionSubstitutions"
+  ],
   "primaryIdentifier": [
     "/properties/Arn"
   ],
