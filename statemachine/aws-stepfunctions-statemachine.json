@@ -176,7 +176,8 @@
     "/properties/Name"
   ],
   "createOnlyProperties": [
-    "/properties/StateMachineName"
+    "/properties/StateMachineName",
+    "/properties/StateMachineType"
   ],
   "writeOnlyProperties": [
     "/properties/Definition",
