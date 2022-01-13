@@ -65,4 +65,3 @@ For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::G
 #### Arn
 
 Returns the <code>Arn</code> value.
-
