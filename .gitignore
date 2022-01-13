@@ -17,5 +17,8 @@ wrapper
 **/*.zip
 **/*.gz
 
+# auto-generated docs
+**/docs
+
 # Log files
 **/rpdk.log
