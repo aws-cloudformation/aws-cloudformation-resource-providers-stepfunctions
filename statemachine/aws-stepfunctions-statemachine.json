@@ -62,6 +62,7 @@
         "Destinations": {
           "type": "array",
           "minItems": 1,
+          "insertionOrder": false,
           "items": {
             "$ref": "#/definitions/LogDestination"
           }
@@ -162,6 +163,7 @@
     "Tags": {
       "type": "array",
       "uniqueItems": false,
+      "insertionOrder": false,
       "items": {
         "$ref": "#/definitions/TagsEntry"
       }
@@ -170,6 +172,13 @@
   "required": [
     "RoleArn"
   ],
+  "tagging": {
+    "taggable": true,
+    "tagOnCreate": true,
+    "tagUpdatable": true,
+    "cloudFormationSystemTags": true,
+    "tagProperty": "/properties/Tags"
+  },
   "additionalProperties": false,
   "readOnlyProperties": [
     "/properties/Arn",
