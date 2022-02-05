@@ -14,5 +14,11 @@
         "End": true
       }
     }
-  }
+  },
+  "Tags": [
+    {
+      "Key": "Key2",
+      "Value": "Value2"
+    }
+  ]
 }
