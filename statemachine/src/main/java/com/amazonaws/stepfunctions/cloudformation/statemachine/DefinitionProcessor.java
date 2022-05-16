@@ -80,7 +80,7 @@ public class DefinitionProcessor {
      */
     public static void processDefinition(final AmazonWebServicesClientProxy proxy, final ResourceModel model, final MetricsRecorder metricsRecorder) {
         if (model.getDefinitionS3Location() != null) {
-            model.setDefinitionString(fetchS3Definition(model.getDefinitionS3Location(), proxy, metricsRecorder));
+            model.setDefinitionString(fetchS3Definition(model, proxy, metricsRecorder));
         }
 
         if (model.getDefinition() != null) {
@@ -92,7 +92,8 @@ public class DefinitionProcessor {
         }
     }
 
-    private static String fetchS3Definition(final S3Location s3Location, final AmazonWebServicesClientProxy proxy, final MetricsRecorder metricsRecorder) {
+    private static String fetchS3Definition(final ResourceModel model, final AmazonWebServicesClientProxy proxy, final MetricsRecorder metricsRecorder) {
+        S3Location s3Location = model.getDefinitionS3Location();
         AmazonS3 s3Client = ClientBuilder.getS3Client();
         GetObjectRequest getObjectRequest = new GetObjectRequest(s3Location.getBucket(), s3Location.getKey());
         if (s3Location.getVersion() != null && !s3Location.getVersion().isEmpty()) {
@@ -112,6 +113,11 @@ public class DefinitionProcessor {
             throw new CfnInternalFailureException(e);
         }
 
+        // DefinitionSubstitution before parsing to JSON or YAML format
+        if (model.getDefinitionSubstitutions() != null) {
+            definition = transformDefinition(definition, model.getDefinitionSubstitutions());
+        }
+
         // Parse JSON format first, then YAML.
         try {
             jsonMapper.readTree(definition);
@@ -125,7 +131,6 @@ public class DefinitionProcessor {
                 throw new TerminalException(Constants.DEFINITION_INVALID_FORMAT_ERROR_MESSAGE);
             }
         }
-
         return definition;
     }
 
