@@ -113,7 +113,7 @@ public class DefinitionProcessor {
             throw new CfnInternalFailureException(e);
         }
 
-        //DefinitionSubstitution before validating JSON or YAML format
+        // DefinitionSubstitution before validating JSON or YAML format
         if (model.getDefinitionSubstitutions() != null) {
             definition = transformDefinition(definition, model.getDefinitionSubstitutions());
         }
