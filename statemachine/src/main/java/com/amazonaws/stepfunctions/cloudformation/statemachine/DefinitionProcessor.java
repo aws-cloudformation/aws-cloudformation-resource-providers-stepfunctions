@@ -79,16 +79,16 @@ public class DefinitionProcessor {
      * @param metricsRecorder The MetricsRecorder object used for collecting anonymous property usage metrics
      */
     public static void processDefinition(final AmazonWebServicesClientProxy proxy, final ResourceModel model, final MetricsRecorder metricsRecorder) {
+        if (model.getDefinitionString() != null && model.getDefinitionSubstitutions() != null) {
+            model.setDefinitionString(transformDefinition(model.getDefinitionString(), model.getDefinitionSubstitutions()));
+        }
+
         if (model.getDefinitionS3Location() != null) {
             model.setDefinitionString(fetchS3Definition(model, proxy, metricsRecorder));
         }
 
         if (model.getDefinition() != null) {
-            model.setDefinitionString(convertDefinitionObjectToString(model.getDefinition()));
-        }
-
-        if (model.getDefinitionSubstitutions() != null) {
-            model.setDefinitionString(transformDefinition(model.getDefinitionString(), model.getDefinitionSubstitutions()));
+            model.setDefinitionString(convertDefinitionObjectToString(model));
         }
     }
 
@@ -135,9 +135,15 @@ public class DefinitionProcessor {
         return definition;
     }
 
-    private static String convertDefinitionObjectToString(final Map<String, Object> definitionObject) {
+    private static String convertDefinitionObjectToString(final ResourceModel model) {
+        final Map<String, Object> definitionObject = model.getDefinition();
         try {
-            return jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(definitionObject);
+            String definition = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(definitionObject);
+            // DefinitionSubstitution before validating JSON or YAML format
+            if (model.getDefinitionSubstitutions() != null) {
+                return transformDefinition(definition, model.getDefinitionSubstitutions());
+            }
+            return definition;
         } catch (JsonProcessingException e) {
             throw new TerminalException(Constants.DEFINITION_INVALID_FORMAT_ERROR_MESSAGE);
         }

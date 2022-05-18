@@ -142,12 +142,20 @@ public class CreateHandlerTest extends HandlerTestBase {
                 "        \"Lambda01\": \"${lambdaArn01}\"\n" +
                 "      }\n" +
                 "    }\n" +
+                "    \"number\": {\n" +
+                "      \"Resource\": ${number}\n" +
+                "    },\n" +
+                "    \"boolean\": {\n" +
+                "      \"Resource\": ${boolean}\n" +
+                "    },\n" +
                 "  }\n" +
                 "}";
 
         Map<String, String> substitutions = new HashMap<>();
         substitutions.put("lambdaArn01", "lambdaArn01");
         substitutions.put("lambdaArn02", "lambdaArn02");
+        substitutions.put("number", "5");
+        substitutions.put("boolean", "true");
 
         request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
         request.getDesiredResourceState().setDefinitionString(definition);
@@ -164,6 +172,8 @@ public class CreateHandlerTest extends HandlerTestBase {
 
         assertThat(!transformedDefinition.contains("${lambdaArn01}")).isTrue();
         assertThat(!transformedDefinition.contains("${lambdaArn02}")).isTrue();
+        assertThat(!transformedDefinition.contains("${number}")).isTrue();
+        assertThat(!transformedDefinition.contains("${boolean}")).isTrue();
     }
 
     @Test
@@ -253,6 +263,46 @@ public class CreateHandlerTest extends HandlerTestBase {
 
         S3Object s3Object = new S3Object();
         s3Object.setObjectContent(new StringInputStream("Comment: Hello World"));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getDefinitionString()).isEqualTo(formattedJson);
+    }
+
+    @Test
+    public void testNonStringDefinitionSubstitutionFromS3() throws Exception {
+        String formattedJson = "{\n" +
+                "  \"StartAt\" : \"DummyState\",\n" +
+                "  \"TimeoutSeconds\" : 60,\n" +
+                "  \"States\" : {\n" +
+                "    \"DummyState\" : {\n" +
+                "      \"Type\" : \"Pass\",\n" +
+                "      \"End\" : true\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        Map<String, String> substitutions = new HashMap<>();
+        substitutions.put("startState", "DummyState");
+        substitutions.put("type", "Pass");
+        substitutions.put("timeoutSeconds", "60");
+        substitutions.put("isEnd", "true");
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        String definitionInS3 = "StartAt: \"${startState}\"\nTimeoutSeconds: ${timeoutSeconds}\nStates:\n  DummyState:\n    Type: Pass\n    End: ${isEnd}\n  ";
+        s3Object.setObjectContent(new StringInputStream(definitionInS3));
         GetObjectResult getObjectResult = new GetObjectResult(s3Object);
 
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
