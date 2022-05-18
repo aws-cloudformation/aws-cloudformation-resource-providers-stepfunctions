@@ -186,15 +186,20 @@ public class CreateHandlerTest extends HandlerTestBase {
         Map<String, Object> passState = new HashMap<>();
         passState.put("Next", "${lambdaStateName}");
 
+        Map<String, Object> timeoutSeconds = new HashMap<>();
+        passState.put("TimeoutSeconds", "${timeoutSeconds}");
+
         Map<String, Map<String, Object>> states = new HashMap<>();
         states.put("lambda_01", lambdaState);
         states.put("PassState", passState);
+        states.put("TimeoutSeconds", timeoutSeconds);
 
         definition.put("States", states);
 
         Map<String, String> substitutions = new HashMap<>();
         substitutions.put("lambdaArn01", "lambdaArn01");
         substitutions.put("lambdaStateName", "lambda_01");
+        substitutions.put("timeoutSeconds", "60");
 
         request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
         request.getDesiredResourceState().setDefinition(definition);
