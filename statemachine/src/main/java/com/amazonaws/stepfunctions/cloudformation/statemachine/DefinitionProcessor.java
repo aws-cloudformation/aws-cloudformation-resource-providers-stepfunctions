@@ -79,21 +79,26 @@ public class DefinitionProcessor {
      * @param metricsRecorder The MetricsRecorder object used for collecting anonymous property usage metrics
      */
     public static void processDefinition(final AmazonWebServicesClientProxy proxy, final ResourceModel model, final MetricsRecorder metricsRecorder) {
-        if (model.getDefinitionString() != null && model.getDefinitionSubstitutions() != null) {
-            model.setDefinitionString(transformDefinition(model.getDefinitionString(), model.getDefinitionSubstitutions()));
+        String definition = "";
+        if(model.getDefinitionString() != null){
+            definition = model.getDefinitionString();
+        }
+        else{
+            definition = model.getDefinitionS3Location() != null ? fetchS3Definition(model.getDefinitionS3Location(), proxy) : convertDefinitionObjectToString(model.getDefinition());
         }
 
-        if (model.getDefinitionS3Location() != null) {
-            model.setDefinitionString(fetchS3Definition(model, proxy, metricsRecorder));
+        if (model.getDefinitionSubstitutions() != null) {
+            definition = transformDefinition(definition, model.getDefinitionSubstitutions());
         }
 
-        if (model.getDefinition() != null) {
-            model.setDefinitionString(convertDefinitionObjectToString(model));
+        if(model.getDefinitionS3Location() != null){
+            definition = parseJsonOrYaml(definition, metricsRecorder);
         }
+
+        model.setDefinitionString(definition);
     }
 
-    private static String fetchS3Definition(final ResourceModel model, final AmazonWebServicesClientProxy proxy, final MetricsRecorder metricsRecorder) {
-        final S3Location s3Location = model.getDefinitionS3Location();
+    private static String fetchS3Definition(final S3Location s3Location, final AmazonWebServicesClientProxy proxy) {
         AmazonS3 s3Client = ClientBuilder.getS3Client();
         GetObjectRequest getObjectRequest = new GetObjectRequest(s3Location.getBucket(), s3Location.getKey());
         if (s3Location.getVersion() != null && !s3Location.getVersion().isEmpty()) {
@@ -113,11 +118,10 @@ public class DefinitionProcessor {
             throw new CfnInternalFailureException(e);
         }
 
-        // DefinitionSubstitution before validating JSON or YAML format
-        if (model.getDefinitionSubstitutions() != null) {
-            definition = transformDefinition(definition, model.getDefinitionSubstitutions());
-        }
+        return definition;
+    }
 
+    private static String parseJsonOrYaml(String definition, final MetricsRecorder metricsRecorder){
         // Parse JSON format first, then YAML.
         try {
             jsonMapper.readTree(definition);
@@ -135,15 +139,9 @@ public class DefinitionProcessor {
         return definition;
     }
 
-    private static String convertDefinitionObjectToString(final ResourceModel model) {
-        final Map<String, Object> definitionObject = model.getDefinition();
+    private static String convertDefinitionObjectToString(final Map<String, Object> definitionObject) {
         try {
-            String definition = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(definitionObject);
-            // DefinitionSubstitution before validating JSON or YAML format
-            if (model.getDefinitionSubstitutions() != null) {
-                return transformDefinition(definition, model.getDefinitionSubstitutions());
-            }
-            return definition;
+            return jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(definitionObject);
         } catch (JsonProcessingException e) {
             throw new TerminalException(Constants.DEFINITION_INVALID_FORMAT_ERROR_MESSAGE);
         }
