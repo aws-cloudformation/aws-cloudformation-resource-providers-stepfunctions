@@ -151,11 +151,11 @@ public class CreateHandlerTest extends HandlerTestBase {
                 "  }\n" +
                 "}";
 
-        Map<String, String> substitutions = new HashMap<>();
+        Map<String, Object> substitutions = new HashMap<>();
         substitutions.put("lambdaArn01", "lambdaArn01");
         substitutions.put("lambdaArn02", "lambdaArn02");
-        substitutions.put("number", "5");
-        substitutions.put("boolean", "true");
+        substitutions.put("number", 5);
+        substitutions.put("boolean", true);
 
         request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
         request.getDesiredResourceState().setDefinitionString(definition);
@@ -196,10 +196,10 @@ public class CreateHandlerTest extends HandlerTestBase {
 
         definition.put("States", states);
 
-        Map<String, String> substitutions = new HashMap<>();
+        Map<String, Object> substitutions = new HashMap<>();
         substitutions.put("lambdaArn01", "lambdaArn01");
         substitutions.put("lambdaStateName", "lambda_01");
-        substitutions.put("timeoutSeconds", "60");
+        substitutions.put("timeoutSeconds", 60);
 
         request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
         request.getDesiredResourceState().setDefinition(definition);
@@ -296,11 +296,11 @@ public class CreateHandlerTest extends HandlerTestBase {
                 "  }\n" +
                 "}";
 
-        Map<String, String> substitutions = new HashMap<>();
+        Map<String, Object> substitutions = new HashMap<>();
         substitutions.put("startState", "DummyState");
         substitutions.put("type", "Pass");
-        substitutions.put("timeoutSeconds", "60");
-        substitutions.put("isEnd", "true");
+        substitutions.put("timeoutSeconds", 60);
+        substitutions.put("isEnd", true);
 
         request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
         request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
@@ -336,11 +336,11 @@ public class CreateHandlerTest extends HandlerTestBase {
                 "  }\n" +
                 "}";
 
-        Map<String, String> substitutions = new HashMap<>();
+        Map<String, Object> substitutions = new HashMap<>();
         substitutions.put("startState", "DummyState");
         substitutions.put("type", "Pass");
-        substitutions.put("timeoutSeconds", "60");
-        substitutions.put("isEnd", "true");
+        substitutions.put("timeoutSeconds", 60);
+        substitutions.put("isEnd", true);
 
         request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
         request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));

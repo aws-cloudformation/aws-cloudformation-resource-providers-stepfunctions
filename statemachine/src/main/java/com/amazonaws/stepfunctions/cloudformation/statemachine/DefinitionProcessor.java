@@ -79,8 +79,8 @@ public class DefinitionProcessor {
      * @param metricsRecorder The MetricsRecorder object used for collecting anonymous property usage metrics
      */
     public static void processDefinition(final AmazonWebServicesClientProxy proxy, final ResourceModel model, final MetricsRecorder metricsRecorder) {
-        String definition = "";
-        if(model.getDefinitionString() != null){
+        String definition;
+        if(model.getDefinitionString() != null) {
             definition = model.getDefinitionString();
         }
         else{
@@ -147,12 +147,12 @@ public class DefinitionProcessor {
         }
     }
 
-    private static String transformDefinition(final String definitionString, final Map<String, String> resourceMappings) {
+    private static String transformDefinition(final String definitionString, final Map<String, Object> resourceMappings) {
         List<String> searchList = new ArrayList<>();
         List<String> replacementList = new ArrayList<>();
-        for (Map.Entry<String, String> e : resourceMappings.entrySet()) {
+        for (Map.Entry<String, Object> e : resourceMappings.entrySet()) {
             searchList.add("${" + e.getKey() + "}");
-            replacementList.add(e.getValue());
+            replacementList.add(e.getValue().toString());
         }
         return StringUtils.replaceEachRepeatedly(definitionString, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
     }
