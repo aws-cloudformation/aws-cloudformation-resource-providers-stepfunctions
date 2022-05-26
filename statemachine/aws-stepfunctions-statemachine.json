@@ -101,11 +101,18 @@
       "type": "object",
       "additionalProperties": false,
       "patternProperties": {
-        "key": {
-          "type": "string"
-        },
-        "value": {
-          "type": "object"
+        ".*": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
         }
       },
       "minProperties": 1
