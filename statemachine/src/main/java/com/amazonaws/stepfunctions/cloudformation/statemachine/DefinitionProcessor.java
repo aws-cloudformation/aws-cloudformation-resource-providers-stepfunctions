@@ -151,6 +151,9 @@ public class DefinitionProcessor {
         List<String> searchList = new ArrayList<>();
         List<String> replacementList = new ArrayList<>();
         for (Map.Entry<String, Object> e : resourceMappings.entrySet()) {
+            if (!(e.getValue() instanceof String) && !(e.getValue() instanceof Integer) && !(e.getValue() instanceof Boolean)) {
+                throw new TerminalException(Constants.DEFINITION_SUBSTITUTION_INVALID_TYPE_ERROR_MESSAGE);
+            }
             searchList.add("${" + e.getKey() + "}");
             replacementList.add(e.getValue().toString());
         }
