@@ -145,7 +145,7 @@ public class CreateHandlerTest extends HandlerTestBase {
                 "  }\n" +
                 "}";
 
-        Map<String, String> substitutions = new HashMap<>();
+        Map<String, Object> substitutions = new HashMap<>();
         substitutions.put("lambdaArn01", "lambdaArn01");
         substitutions.put("lambdaArn02", "lambdaArn02");
 
@@ -182,7 +182,7 @@ public class CreateHandlerTest extends HandlerTestBase {
 
         definition.put("States", states);
 
-        Map<String, String> substitutions = new HashMap<>();
+        Map<String, Object> substitutions = new HashMap<>();
         substitutions.put("lambdaArn01", "lambdaArn01");
         substitutions.put("lambdaStateName", "lambda_01");
 
@@ -266,6 +266,315 @@ public class CreateHandlerTest extends HandlerTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getResourceModel().getDefinitionString()).isEqualTo(formattedJson);
+    }
+
+    @Test
+    public void testDefinitionFromS3InJSON() throws Exception {
+        String formattedJson = "{\n" +
+                "  \"Comment\" : \"Hello World\"\n" +
+                "}";
+
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectContent(new StringInputStream("{\n  \"Comment\" : \"Hello World\"\n}"));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getDefinitionString()).isEqualTo(formattedJson);
+    }
+
+    @Test
+    public void testDefinitionSubstitutionsWithAcceptableType_String_shouldReturn_YAMLDefinition_WithSubstitutionsMade() throws Exception {
+        String formattedJson = "{\n" +
+                "  \"StartAt\" : \"DummyState\"\n" +
+                "}";
+
+        Map<String, Object> substitutions = new HashMap<>();
+        substitutions.put("startState", "DummyState");
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        String yamlDefinitionInS3 = "StartAt: \"${startState}\"\n  ";
+        s3Object.setObjectContent(new StringInputStream(yamlDefinitionInS3));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getDefinitionString()).isEqualTo(formattedJson);
+    }
+
+    @Test
+    public void testDefinitionSubstitutionsWithAcceptableType_Integer_shouldReturn_YAMLDefinition_WithSubstitutionsMade() throws Exception {
+        String formattedJson = "{\n" +
+                "  \"TimeoutSeconds\" : \"60\"\n" +
+                "}";
+
+        Map<String, Object> substitutions = new HashMap<>();
+        substitutions.put("timeoutSeconds", 60);
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        String yamlDefinitionInS3 = "TimeoutSeconds: \"${timeoutSeconds}\"\n  ";
+        s3Object.setObjectContent(new StringInputStream(yamlDefinitionInS3));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getDefinitionString()).isEqualTo(formattedJson);
+    }
+
+    @Test
+    public void testDefinitionSubstitutionsWithAcceptableType_Boolean_shouldReturn_YAMLDefinition_WithSubstitutionsMade() throws Exception {
+        String formattedJson = "{\n" +
+                "  \"End\" : \"true\"\n" +
+                "}";
+
+        Map<String, Object> substitutions = new HashMap<>();
+        substitutions.put("isEnd", true);
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        String yamlDefinitionInS3 = "End: \"${isEnd}\"\n  ";
+        s3Object.setObjectContent(new StringInputStream(yamlDefinitionInS3));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getDefinitionString()).isEqualTo(formattedJson);
+    }
+
+    @Test
+    public void testDefinitionSubstitutionsWithUnacceptableType_Double_YAMLDefinition_shouldThrow() throws Exception{
+        Map<String, Object> substitutions = new HashMap<>();
+        substitutions.put("timeoutSeconds", 0.5);
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        String jsonDefinitionInS3 = "TimeoutSeconds: \"${timeoutSeconds}\"\n  ";
+        s3Object.setObjectContent(new StringInputStream(jsonDefinitionInS3));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_SUBSTITUTION_INVALID_TYPE_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testDefinitionSubstitutionsWithUnacceptableType_null_YAMLDefinition_shouldThrow() throws Exception{
+        Map<String, Object> substitutions = new HashMap<>();
+        substitutions.put("timeoutSeconds", null);
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        String jsonDefinitionInS3 = "TimeoutSeconds: \"${timeoutSeconds}\"\n  ";
+        s3Object.setObjectContent(new StringInputStream(jsonDefinitionInS3));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_SUBSTITUTION_INVALID_TYPE_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testDefinitionSubstitutionsWithAcceptableType_String_shouldReturn_JSONDefinition_WithSubstitutionsMade() throws Exception {
+        String formattedJson = "{\n" +
+                "  \"StartAt\" : \"DummyState\"\n" +
+                "}";
+
+        Map<String, Object> substitutions = new HashMap<>();
+        substitutions.put("startState", "DummyState");
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        String jsonDefinitionInS3 = "{\n  \"StartAt\" : \"${startState}\"\n}";
+        s3Object.setObjectContent(new StringInputStream(jsonDefinitionInS3));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getDefinitionString()).isEqualTo(formattedJson);
+    }
+
+    @Test
+    public void testDefinitionSubstitutionsWithAcceptableType_Integer_shouldReturn_JSONDefinition_WithSubstitutionsMade() throws Exception {
+        String formattedJson = "{\n" +
+                "  \"TimeoutSeconds\" : \"60\"\n" +
+                "}";
+
+        Map<String, Object> substitutions = new HashMap<>();
+        substitutions.put("timeoutSeconds", 60);
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        String jsonDefinitionInS3 = "{\n  \"TimeoutSeconds\" : \"${timeoutSeconds}\"\n}";
+        s3Object.setObjectContent(new StringInputStream(jsonDefinitionInS3));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getDefinitionString()).isEqualTo(formattedJson);
+    }
+
+    @Test
+    public void testDefinitionSubstitutionsWithAcceptableType_Boolean_shouldReturn_JSONDefinition_WithSubstitutionsMade() throws Exception {
+        String formattedJson = "{\n" +
+                "  \"End\" : \"true\"\n" +
+                "}";
+
+        Map<String, Object> substitutions = new HashMap<>();
+        substitutions.put("isEnd", true);
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        String jsonDefinitionInS3 = "{\n  \"End\" : \"${isEnd}\"\n}";
+        s3Object.setObjectContent(new StringInputStream(jsonDefinitionInS3));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getDefinitionString()).isEqualTo(formattedJson);
+    }
+
+    @Test
+    public void testDefinitionSubstitutionsWithUnacceptableType_Double_JSONDefinition_shouldThrow() throws Exception{
+        Map<String, Object> substitutions = new HashMap<>();
+        substitutions.put("timeoutSeconds", 0.5);
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        String jsonDefinitionInS3 = "{\n  \"TimeoutSeconds\" : \"${timeoutSeconds}\"\n}";
+        s3Object.setObjectContent(new StringInputStream(jsonDefinitionInS3));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_SUBSTITUTION_INVALID_TYPE_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testDefinitionSubstitutionsWithUnacceptableType_null_JSONDefinition_shouldThrow() throws Exception{
+        Map<String, Object> substitutions = new HashMap<>();
+        substitutions.put("timeoutSeconds", null);
+
+        request.getDesiredResourceState().setDefinitionSubstitutions(substitutions);
+        request.getDesiredResourceState().setDefinitionS3Location(new S3Location(DEFAULT_S3_BUCKET, DEFAULT_S3_KEY, DEFAULT_S3_OBJECT_VERSION));
+
+        S3Object s3Object = new S3Object();
+        String jsonDefinitionInS3 = "{\n  \"TimeoutSeconds\" : \"${timeoutSeconds}\"\n}";
+        s3Object.setObjectContent(new StringInputStream(jsonDefinitionInS3));
+        GetObjectResult getObjectResult = new GetObjectResult(s3Object);
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getMessage()).isEqualTo(Constants.DEFINITION_SUBSTITUTION_INVALID_TYPE_ERROR_MESSAGE);
     }
 
     @Test

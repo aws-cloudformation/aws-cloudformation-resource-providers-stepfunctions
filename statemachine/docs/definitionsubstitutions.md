@@ -8,14 +8,14 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 
 <pre>
 {
-    "<a href="#.*" title=".*">.*</a>" : <i>String</i>
+    "<a href="#.*" title=".*">.*</a>" : <i>String, Integer, Boolean</i>
 }
 </pre>
 
 ### YAML
 
 <pre>
-<a href="#.*" title=".*">.*</a>: <i>String</i>
+<a href="#.*" title=".*">.*</a>: <i>String, Integer, Boolean</i>
 </pre>
 
 ## Properties
@@ -24,6 +24,6 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 
 _Required_: No
 
-_Type_: String
+_Type_: String, Integer, Boolean
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)

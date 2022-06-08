@@ -79,20 +79,26 @@ public class DefinitionProcessor {
      * @param metricsRecorder The MetricsRecorder object used for collecting anonymous property usage metrics
      */
     public static void processDefinition(final AmazonWebServicesClientProxy proxy, final ResourceModel model, final MetricsRecorder metricsRecorder) {
-        if (model.getDefinitionS3Location() != null) {
-            model.setDefinitionString(fetchS3Definition(model.getDefinitionS3Location(), proxy, metricsRecorder));
+        String definition;
+        if(model.getDefinitionString() != null) {
+            definition = model.getDefinitionString();
         }
-
-        if (model.getDefinition() != null) {
-            model.setDefinitionString(convertDefinitionObjectToString(model.getDefinition()));
+        else{
+            definition = model.getDefinitionS3Location() != null ? fetchS3Definition(model.getDefinitionS3Location(), proxy) : convertDefinitionObjectToString(model.getDefinition());
         }
 
         if (model.getDefinitionSubstitutions() != null) {
-            model.setDefinitionString(transformDefinition(model.getDefinitionString(), model.getDefinitionSubstitutions()));
+            definition = transformDefinition(definition, model.getDefinitionSubstitutions());
         }
+
+        if(model.getDefinitionS3Location() != null){
+            definition = parseJsonOrYaml(definition, metricsRecorder);
+        }
+
+        model.setDefinitionString(definition);
     }
 
-    private static String fetchS3Definition(final S3Location s3Location, final AmazonWebServicesClientProxy proxy, final MetricsRecorder metricsRecorder) {
+    private static String fetchS3Definition(final S3Location s3Location, final AmazonWebServicesClientProxy proxy) {
         AmazonS3 s3Client = ClientBuilder.getS3Client();
         GetObjectRequest getObjectRequest = new GetObjectRequest(s3Location.getBucket(), s3Location.getKey());
         if (s3Location.getVersion() != null && !s3Location.getVersion().isEmpty()) {
@@ -112,6 +118,10 @@ public class DefinitionProcessor {
             throw new CfnInternalFailureException(e);
         }
 
+        return definition;
+    }
+
+    private static String parseJsonOrYaml(String definition, final MetricsRecorder metricsRecorder){
         // Parse JSON format first, then YAML.
         try {
             jsonMapper.readTree(definition);
@@ -137,12 +147,15 @@ public class DefinitionProcessor {
         }
     }
 
-    private static String transformDefinition(final String definitionString, final Map<String, String> resourceMappings) {
+    private static String transformDefinition(final String definitionString, final Map<String, Object> resourceMappings) {
         List<String> searchList = new ArrayList<>();
         List<String> replacementList = new ArrayList<>();
-        for (Map.Entry<String, String> e : resourceMappings.entrySet()) {
+        for (Map.Entry<String, Object> e : resourceMappings.entrySet()) {
+            if (!(e.getValue() instanceof String) && !(e.getValue() instanceof Integer) && !(e.getValue() instanceof Boolean)) {
+                throw new TerminalException(Constants.DEFINITION_SUBSTITUTION_INVALID_TYPE_ERROR_MESSAGE);
+            }
             searchList.add("${" + e.getKey() + "}");
-            replacementList.add(e.getValue());
+            replacementList.add(e.getValue().toString());
         }
         return StringUtils.replaceEachRepeatedly(definitionString, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
     }
