@@ -7,11 +7,19 @@ Please read through this document before submitting any issues or pull requests 
 information to effectively respond to your bug report or contribution.
 
 
-## Prerequisites
+## Package Setup
 
-1. Create a new fork of the main repository by following [these instructions](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo)
-2. Install version `3.8.1` of Apache Maven from https://maven.apache.org/install.html
-3. Install Java 8 from https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html
+1. Follow the CloudFormation CLI environment setup instructions [here](https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/what-is-cloudformation-cli.html#resource-type-setup).
+2. Install version `3.8.1` of Apache Maven [here](https://maven.apache.org/install.html).
+3. Install Java 8 [here](https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html).
+4. Create a new fork of the main repository by following [these instructions](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo).
+5. Open the project in Intellij:
+    1. From the File menu, choose New, then choose Project From Existing Sources.
+    2. Select the folder for the resource that you will be developing (eg. statemachine).
+    3. In the Import Project dialog box, choose Import project from external model and then choose Maven.
+    4. Choose Next and accept any defaults to complete importing the project.
+    5. From the Build menu, choose Build Project
+6. From the root of the resource package run `mvn clean && cfn generate && mvn package`
 
 ## Reporting Bugs/Feature Requests
 
@@ -33,17 +41,15 @@ Contributions via pull requests are much appreciated. Before sending us a pull r
 2. You check existing open, and recently merged, pull requests to make sure someone else hasn't addressed the problem already.
 3. You open an issue to discuss any significant work - we would hate for your time to be wasted.
 
-To send us a pull request, please:
+To send us a pull request from your fork of the repository, please:
 
-1. Fork the repository.
 2. Modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
-3. Ensure local tests pass.
+3. Ensure local tests pass by running `mvn test` from the root of the resource package.
 4. Commit to your fork using clear commit messages.
 5. Send us a pull request, answering any default questions in the pull request interface.
 6. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
 
-GitHub provides additional document on [forking a repository](https://help.github.com/articles/fork-a-repo/) and
-[creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
+GitHub provides additional document on [creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
 
 
 ## Finding contributions to work on
@@ -61,5 +67,4 @@ If you discover a potential security issue in this project we ask that you notif
 
 
 ## Licensing
-
 See the [LICENSE](LICENSE) file for our project's licensing. We will ask you to confirm the licensing of your contribution.
