@@ -12,14 +12,15 @@ information to effectively respond to your bug report or contribution.
 1. Follow the CloudFormation CLI environment setup instructions [here](https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/what-is-cloudformation-cli.html#resource-type-setup).
 2. Install version `3.8.1` of Apache Maven [here](https://maven.apache.org/install.html).
 3. Install Java 8 [here](https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html).
-4. Create a new fork of the main repository by following [these instructions](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo).
-5. Open the project in Intellij:
+4. Install pre-commit [here](https://pre-commit.com/#install)
+5. Create a new fork of the main repository by following [these instructions](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo).
+6. Open the project in Intellij:
     1. From the File menu, choose New, then choose Project From Existing Sources.
     2. Select the folder for the resource that you will be developing (eg. statemachine).
     3. In the Import Project dialog box, choose Import project from external model and then choose Maven.
     4. Choose Next and accept any defaults to complete importing the project.
     5. From the Build menu, choose Build Project
-6. From the root of the resource package run `mvn clean && cfn generate && mvn package`
+7. From the root of the resource package run `mvn clean && cfn generate && mvn package`
 
 ## Reporting Bugs/Feature Requests
 
@@ -46,8 +47,9 @@ To send us a pull request from your fork of the repository, please:
 2. Modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
 3. Ensure local tests pass by running `mvn test` from the root of the resource package.
 4. Commit to your fork using clear commit messages.
-5. Send us a pull request, answering any default questions in the pull request interface.
-6. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
+5. Before pushing to your local fork, run `pre-commit run --all-files`. Commit any changes made by pre-commit.
+6. Send us a pull request, answering any default questions in the pull request interface.
+7. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
 
 GitHub provides additional document on [creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
 
