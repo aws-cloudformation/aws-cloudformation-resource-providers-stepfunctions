@@ -50,7 +50,7 @@ public class ClientBuilder {
             return Constants.ACCESS_DENIED_ERROR_CODE.equals(exception.getErrorCode())
                     && (exception.getErrorMessage().contains(Constants.MANAGED_RULE_EXCEPTION_MESSAGE_SUBSTRING) ||
                     exception.getErrorMessage().contains(Constants.STS_AUTHORIZED_TO_ASSUME_MESSAGE_SUBSTRING) ||
-                    exception.getErrorMessage().contains(Constants.LOGGING_ACCESS_DENIED_SUBSTRING));
+                    exception.getErrorMessage().contains(Constants.LOGGING_ACCESS_DENIED_MESSAGE_SUBSTRING));
         }
 
     }
