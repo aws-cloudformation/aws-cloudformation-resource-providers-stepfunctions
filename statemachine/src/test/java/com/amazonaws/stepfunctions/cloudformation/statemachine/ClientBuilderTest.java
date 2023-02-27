@@ -36,6 +36,9 @@ public class ClientBuilderTest {
 
         e.setErrorMessage(Constants.STS_AUTHORIZED_TO_ASSUME_MESSAGE_SUBSTRING);
         assertThat(retryPolicy.getRetryCondition().shouldRetry(request, e, 0)).isTrue();
+
+        e.setErrorMessage(Constants.LOGGING_ACCESS_DENIED_SUBSTRING);
+        assertThat(retryPolicy.getRetryCondition().shouldRetry(request, e, 0)).isTrue();
     }
 
 }
