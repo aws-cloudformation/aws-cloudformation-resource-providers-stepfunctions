@@ -1,0 +1,27 @@
+{
+  "CreateInputs": {
+    "Name": "ContractTestStateMachineAlias-{{uuid}}",
+    "RoutingConfiguration": [
+      {
+        "StateMachineVersionArn": "{{awsstepfunctionsstatemachinealiascto1}}",
+        "Weight": 100
+      }
+    ],
+    "Description": "Initial alias description"
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/Description",
+      "value": "Updated description"
+    }
+  ],
+  "ListInputs": {
+    "RoutingConfiguration": [
+      {
+        "StateMachineVersionArn": "{{awsstepfunctionsstatemachinealiascto1}}",
+        "Weight": 100
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+Resources:
+  MyStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionString: "{\"StartAt\": \"HelloWorld\",  \"States\": {\"HelloWorld\": {\"Type\": \"Pass\", \"Result\": 1, \"End\": true}}}"
+      RoleArn: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/dummy-role-not-used
+  MyStateMachineVersion:
+    Type: AWS::StepFunctions::StateMachineVersion
+    Properties:
+      StateMachineArn: !Ref MyStateMachine
+
+Outputs:
+  StateMachineVersionArn:
+    Value: !Ref MyStateMachineVersion
+    Export:
+      Name: !Sub awsstepfunctionsstatemachinealiascto1-${AWS::StackName}

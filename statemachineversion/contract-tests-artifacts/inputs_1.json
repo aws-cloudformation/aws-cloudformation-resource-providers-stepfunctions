@@ -1,0 +1,11 @@
+{
+  "CreateInputs": {
+    "StateMachineArn": "{{awsstepfunctionsstatemachineversioncto1}}",
+    "StateMachineRevisionId": "{{awsstepfunctionsstatemachineversioncto2}}",
+    "Description": "StateMachineVersion for CloudFormation contract tests"
+  },
+  "PatchInputs": [],
+  "ListInputs": {
+    "StateMachineArn": "{{awsstepfunctionsstatemachineversioncto1}}"
+  }
+}
