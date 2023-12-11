@@ -23,6 +23,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -40,6 +41,7 @@ import static org.mockito.Mockito.when;
 public class UpdateHandlerTest extends HandlerTestBase {
 
     private static final Date UPDATE_DATE = new Date();
+    private final Collection<String> ALARM_TYPES = Arrays.asList("CompositeAlarm", "MetricAlarm");
 
     @BeforeEach
     public void setup() {
@@ -105,7 +107,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
                 Constants.INVALID_ARN_ERROR_CODE, Constants.VALIDATION_ERROR_CODE
         );
 
-        for (String errorCode: invalidRequestErrorCodes) {
+        for (String errorCode : invalidRequestErrorCodes) {
             final AmazonServiceException invalidRequestException = createAndMockAmazonServiceException(errorCode);
             assertFailure(invalidRequestException.getMessage(), HandlerErrorCode.InvalidRequest);
         }
@@ -605,7 +607,8 @@ public class UpdateHandlerTest extends HandlerTestBase {
                 .withRoutingConfiguration(getVersionRoutingConfigSdk(STATE_MACHINE_VERSION_1_ARN, 90, STATE_MACHINE_VERSION_2_ARN, 10));
 
         final DescribeAlarmsRequest describeAlarmsRequest = new DescribeAlarmsRequest()
-                .withAlarmNames(new HashSet<>(Collections.singleton("alarm name")));
+                .withAlarmNames(new HashSet<>(Collections.singleton("alarm name")))
+                .withAlarmTypes(ALARM_TYPES);
 
         final DescribeAlarmsResult describeAlarmsResult = new DescribeAlarmsResult()
                 .withMetricAlarms(new MetricAlarm().withAlarmName("alarm name").withStateValue(StateValue.ALARM));
@@ -833,7 +836,8 @@ public class UpdateHandlerTest extends HandlerTestBase {
                 .withRoutingConfiguration(getVersionRoutingConfigSdk(STATE_MACHINE_VERSION_1_ARN, 90, STATE_MACHINE_VERSION_2_ARN, 10));
 
         final DescribeAlarmsRequest describeAlarmsRequest = new DescribeAlarmsRequest()
-                .withAlarmNames(new HashSet<>(Collections.singleton("alarm name")));
+                .withAlarmNames(new HashSet<>(Collections.singleton("alarm name")))
+                .withAlarmTypes(ALARM_TYPES);
 
         final DescribeAlarmsResult describeAlarmsResult = new DescribeAlarmsResult()
                 .withMetricAlarms(new MetricAlarm().withAlarmName("alarm name").withStateValue(StateValue.ALARM));

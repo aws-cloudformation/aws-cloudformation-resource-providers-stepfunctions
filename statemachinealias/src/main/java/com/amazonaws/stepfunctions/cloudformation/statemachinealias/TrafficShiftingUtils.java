@@ -1,6 +1,7 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachinealias;
 
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
+import com.amazonaws.services.cloudwatch.model.CompositeAlarm;
 import com.amazonaws.services.cloudwatch.model.DescribeAlarmsRequest;
 import com.amazonaws.services.cloudwatch.model.DescribeAlarmsResult;
 import com.amazonaws.services.cloudwatch.model.MetricAlarm;
@@ -74,16 +75,26 @@ public class TrafficShiftingUtils {
 
         final DescribeAlarmsRequest describeAlarmsRequest = new DescribeAlarmsRequest();
         describeAlarmsRequest.setAlarmNames(alarms);
+        describeAlarmsRequest.setAlarmTypes(Arrays.asList("CompositeAlarm", "MetricAlarm"));
 
         final AmazonCloudWatch cwClient = ClientBuilder.getCwClient();
         final DescribeAlarmsResult describeAlarmsResult = proxy.injectCredentialsAndInvoke(
                 describeAlarmsRequest, (Function<DescribeAlarmsRequest, DescribeAlarmsResult>) cwClient::describeAlarms
         );
 
-        return describeAlarmsResult.getMetricAlarms().stream()
+        Set<String> activeMetricAlarmNames = describeAlarmsResult.getMetricAlarms().stream()
                 .filter(alarm -> alarm.getStateValue().equals(StateValue.ALARM.toString()))
                 .map(MetricAlarm::getAlarmName)
                 .collect(Collectors.toSet());
+
+        Set<String> activeCompositeAlarmNames = describeAlarmsResult.getCompositeAlarms().stream()
+                .filter(alarm -> alarm.getStateValue().equals(StateValue.ALARM.toString()))
+                .map(CompositeAlarm::getAlarmName)
+                .collect(Collectors.toSet());
+
+        // Combine both sets
+        activeMetricAlarmNames.addAll(activeCompositeAlarmNames);
+        return activeMetricAlarmNames;
     }
 
     public static boolean shouldPerformTrafficShift(final Instant lastShifted, final int shiftIntervalMinutes) {

@@ -1,16 +1,10 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachinealias;
 
+import com.amazonaws.services.cloudwatch.model.CompositeAlarm;
 import com.amazonaws.services.cloudwatch.model.DescribeAlarmsRequest;
 import com.amazonaws.services.cloudwatch.model.DescribeAlarmsResult;
 import com.amazonaws.services.cloudwatch.model.MetricAlarm;
 import com.amazonaws.services.cloudwatch.model.StateValue;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Function;
-
 import com.amazonaws.services.stepfunctions.model.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,11 +12,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Function;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -30,6 +31,7 @@ public class TrafficShiftingUtilsTest extends HandlerTestBase {
     private final String STATE_MACHINE_VERSION_1_ARN = "arn:aws:states:us-east-1:123456789012:stateMachine:MyStateMachine:1";
     private final String STATE_MACHINE_VERSION_2_ARN = "arn:aws:states:us-east-1:123456789012:stateMachine:MyStateMachine:2";
     private final String STATE_MACHINE_VERSION_3_ARN = "arn:aws:states:us-east-1:123456789012:stateMachine:MyStateMachine:3";
+    private final Collection<String> ALARM_TYPES = Arrays.asList("CompositeAlarm", "MetricAlarm");
     private final Set<String> alarms = new HashSet<>(Arrays.asList("alarm1", "alarm2", "alarm3"));
 
     @Test
@@ -40,8 +42,13 @@ public class TrafficShiftingUtilsTest extends HandlerTestBase {
                 new MetricAlarm().withStateValue(StateValue.OK),
                 new MetricAlarm().withStateValue(StateValue.OK)
         );
+        describeAlarmsResult.withCompositeAlarms(
+                new CompositeAlarm().withStateValue(StateValue.OK),
+                new CompositeAlarm().withStateValue(StateValue.OK),
+                new CompositeAlarm().withStateValue(StateValue.OK)
+        );
 
-        awsRequest = new DescribeAlarmsRequest().withAlarmNames(alarms);
+        awsRequest = new DescribeAlarmsRequest().withAlarmNames(alarms).withAlarmTypes(ALARM_TYPES);
         when(proxy.injectCredentialsAndInvoke(eq(awsRequest), any(Function.class))).thenReturn(describeAlarmsResult);
 
         final Set<String> expected = new HashSet<>();
@@ -55,7 +62,7 @@ public class TrafficShiftingUtilsTest extends HandlerTestBase {
         final DescribeAlarmsResult describeAlarmsResult = new DescribeAlarmsResult();
         describeAlarmsResult.withMetricAlarms();
 
-        awsRequest = new DescribeAlarmsRequest().withAlarmNames(alarms);
+        awsRequest = new DescribeAlarmsRequest().withAlarmNames(alarms).withAlarmTypes(ALARM_TYPES);
         when(proxy.injectCredentialsAndInvoke(eq(awsRequest), any(Function.class))).thenReturn(describeAlarmsResult);
 
         final Set<String> expected = new HashSet<>();
@@ -65,7 +72,7 @@ public class TrafficShiftingUtilsTest extends HandlerTestBase {
     }
 
     @Test
-    public void testAreCloudWatchAlarmsOK_whenAllAlarmsAreInAlarm_thenReturnsFalse() {
+    public void testAreCloudWatchAlarmsOK_whenAllMetricAlarmsAreInAlarm_thenReturnsFalse() {
         final DescribeAlarmsResult describeAlarmsResult = new DescribeAlarmsResult();
         describeAlarmsResult.withMetricAlarms(
                 new MetricAlarm().withStateValue(StateValue.ALARM).withAlarmName("alarm1"),
@@ -73,7 +80,7 @@ public class TrafficShiftingUtilsTest extends HandlerTestBase {
                 new MetricAlarm().withStateValue(StateValue.ALARM).withAlarmName("alarm3")
         );
 
-        awsRequest = new DescribeAlarmsRequest().withAlarmNames(alarms);
+        awsRequest = new DescribeAlarmsRequest().withAlarmNames(alarms).withAlarmTypes(ALARM_TYPES);
         when(proxy.injectCredentialsAndInvoke(eq(awsRequest), any(Function.class))).thenReturn(describeAlarmsResult);
 
         final Set<String> expected = new HashSet<>(Arrays.asList("alarm1", "alarm2", "alarm3"));
@@ -83,7 +90,26 @@ public class TrafficShiftingUtilsTest extends HandlerTestBase {
     }
 
     @Test
-    public void testAreCloudWatchAlarmsOK_whenOneAlarmIsInAlarm_thenReturnsFalse() {
+    public void testAreCloudWatchAlarmsOK_whenAllCompositeAlarmsAreInAlarm_thenReturnsFalse() {
+        final DescribeAlarmsResult describeAlarmsResult = new DescribeAlarmsResult();
+        describeAlarmsResult.withCompositeAlarms(
+                new CompositeAlarm().withStateValue(StateValue.ALARM).withAlarmName("alarm1"),
+                new CompositeAlarm().withStateValue(StateValue.ALARM).withAlarmName("alarm2"),
+                new CompositeAlarm().withStateValue(StateValue.ALARM).withAlarmName("alarm3")
+        );
+
+        awsRequest = new DescribeAlarmsRequest().withAlarmNames(alarms).withAlarmTypes(ALARM_TYPES);
+        when(proxy.injectCredentialsAndInvoke(eq(awsRequest), any(Function.class))).thenReturn(describeAlarmsResult);
+
+        final Set<String> expected = new HashSet<>(Arrays.asList("alarm1", "alarm2", "alarm3"));
+        final Set<String> actual = TrafficShiftingUtils.getActiveAlarms(alarms, proxy);
+
+        assertThat(expected).isEqualTo(actual);
+    }
+
+
+    @Test
+    public void testAreCloudWatchAlarmsOK_whenOneMetricAlarmIsInAlarm_thenReturnsFalse() {
         final DescribeAlarmsResult describeAlarmsResult = new DescribeAlarmsResult();
         describeAlarmsResult.withMetricAlarms(
                 new MetricAlarm().withStateValue(StateValue.OK).withAlarmName("alarm1"),
@@ -91,10 +117,46 @@ public class TrafficShiftingUtilsTest extends HandlerTestBase {
                 new MetricAlarm().withStateValue(StateValue.OK).withAlarmName("alarm3")
         );
 
-        awsRequest = new DescribeAlarmsRequest().withAlarmNames(alarms);
+        awsRequest = new DescribeAlarmsRequest().withAlarmNames(alarms).withAlarmTypes(ALARM_TYPES);
         when(proxy.injectCredentialsAndInvoke(eq(awsRequest), any(Function.class))).thenReturn(describeAlarmsResult);
 
         final Set<String> expected = new HashSet<>(Collections.singletonList("alarm2"));
+        final Set<String> actual = TrafficShiftingUtils.getActiveAlarms(alarms, proxy);
+        assertThat(expected).isEqualTo(actual);
+    }
+
+    @Test
+    public void testAreCloudWatchAlarmsOK_whenOneCompositeAlarmIsInAlarm_thenReturnsFalse() {
+        final DescribeAlarmsResult describeAlarmsResult = new DescribeAlarmsResult();
+        describeAlarmsResult.withCompositeAlarms(
+                new CompositeAlarm().withStateValue(StateValue.OK).withAlarmName("alarm1"),
+                new CompositeAlarm().withStateValue(StateValue.ALARM).withAlarmName("alarm2"),
+                new CompositeAlarm().withStateValue(StateValue.OK).withAlarmName("alarm3")
+        );
+
+        awsRequest = new DescribeAlarmsRequest().withAlarmNames(alarms).withAlarmTypes(ALARM_TYPES);
+        when(proxy.injectCredentialsAndInvoke(eq(awsRequest), any(Function.class))).thenReturn(describeAlarmsResult);
+
+        final Set<String> expected = new HashSet<>(Collections.singletonList("alarm2"));
+        final Set<String> actual = TrafficShiftingUtils.getActiveAlarms(alarms, proxy);
+        assertThat(expected).isEqualTo(actual);
+    }
+
+    @Test
+    public void testAreCloudWatchAlarmsOK_whenOneCompositeAlarmAndOneMetricAlarmAreInAlarm_thenReturnsFalse() {
+        final DescribeAlarmsResult describeAlarmsResult = new DescribeAlarmsResult();
+        describeAlarmsResult.withMetricAlarms(
+                new MetricAlarm().withStateValue(StateValue.OK).withAlarmName("alarm1"),
+                new MetricAlarm().withStateValue(StateValue.ALARM).withAlarmName("alarm2")
+        );
+        describeAlarmsResult.withCompositeAlarms(
+                new CompositeAlarm().withStateValue(StateValue.ALARM).withAlarmName("alarm3")
+        );
+
+        awsRequest = new DescribeAlarmsRequest().withAlarmNames(alarms).withAlarmTypes(ALARM_TYPES);
+        when(proxy.injectCredentialsAndInvoke(eq(awsRequest), any(Function.class))).thenReturn(describeAlarmsResult);
+
+        final Set<String> expected = new HashSet<>(Arrays.asList("alarm2", "alarm3"));
         final Set<String> actual = TrafficShiftingUtils.getActiveAlarms(alarms, proxy);
         assertThat(expected).isEqualTo(actual);
     }
@@ -134,8 +196,8 @@ public class TrafficShiftingUtilsTest extends HandlerTestBase {
 
         final ValidationException expectedException = ResourceHandler.getValidationException(
                 "Failed to start deployment of type 'LINEAR', invalid initial state detected. " +
-                "Expected the alias to be routing 100% of traffic towards one version, but it is currently routing traffic towards two. " +
-                "Update the alias to route 100% of traffic towards one version and try the deployment again."
+                        "Expected the alias to be routing 100% of traffic towards one version, but it is currently routing traffic towards two. " +
+                        "Update the alias to route 100% of traffic towards one version and try the deployment again."
         );
 
         final ValidationException actualException = assertThrows(
