@@ -1,0 +1,20 @@
+{
+    "artifact_type": "RESOURCE",
+    "typeName": "AWS::StepFunctions::StateMachineAlias",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.stepfunctions.cloudformation.statemachinealias.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.stepfunctions.cloudformation.statemachinealias.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "stepfunctions",
+            "cloudformation",
+            "statemachinealias"
+        ],
+        "protocolVersion": "2.0.0"
+    },
+    "logProcessorEnabled": "true",
+    "executableEntrypoint": "com.amazonaws.stepfunctions.cloudformation.statemachinealias.HandlerWrapperExecutable"
+}

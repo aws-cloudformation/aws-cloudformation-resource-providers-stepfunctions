@@ -1,0 +1,30 @@
+{
+  "CreateInputs": {
+    "Name": "ContractTestStateMachineAlias-{{uuid}}",
+    "DeploymentPreference": {
+      "Type": "ALL_AT_ONCE",
+      "StateMachineVersionArn": "{{awsstepfunctionsstatemachinealiascto1}}",
+      "Percentage": 1,
+      "Interval": 1,
+      "Alarms": [
+        "alarm_name"
+      ]
+    },
+    "Description": "Initial alias description"
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/Description",
+      "value": "Updated description"
+    }
+  ],
+  "ListInputs": {
+    "RoutingConfiguration": [
+      {
+        "StateMachineVersionArn": "{{awsstepfunctionsstatemachinealiascto1}}",
+        "Weight": 100
+      }
+    ]
+  }
+}

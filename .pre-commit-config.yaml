@@ -16,4 +16,13 @@ repos:
     - --no-sort-keys
   - id: check-merge-conflict
   - id: check-yaml
-    exclude: codebuild-ci.yaml
+    exclude: |
+      (?x)^(
+      codebuild-ci.yaml|
+      .*dependencies\.yml$
+      )$
+- repo: https://github.com/aws-cloudformation/cfn-lint
+  rev: v0.83.3
+  hooks:
+    - id: cfn-lint
+      files: .*dependencies\.yml$
