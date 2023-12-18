@@ -33,6 +33,7 @@ Resources:
                 - "states:CreateActivity"
                 - "states:DeleteActivity"
                 - "states:DescribeActivity"
+                - "states:ListActivities"
                 - "states:ListTagsForResource"
                 - "states:TagResource"
                 - "states:UntagResource"
