@@ -1,0 +1,6 @@
+{
+  "CreateInputs": {
+    "Name": "ThisNameDoesNotExist-{{uuid}}"
+  },
+  "PatchInputs": []
+}

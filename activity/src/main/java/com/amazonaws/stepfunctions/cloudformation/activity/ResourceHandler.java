@@ -34,6 +34,10 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
                     resultBuilder.errorCode(HandlerErrorCode.NotFound);
                     resultBuilder.message(amznException.getMessage());
                     resultBuilder.status(OperationStatus.FAILED);
+                } else if (Constants.INVALID_TOKEN.equals(errorCode)) {
+                    resultBuilder.errorCode(HandlerErrorCode.InvalidRequest);
+                    resultBuilder.message(amznException.getMessage());
+                    resultBuilder.status(OperationStatus.FAILED);
                 } else {
                     // 400s except for throttle default to FAILURE
                     resultBuilder.errorCode(HandlerErrorCode.GeneralServiceException);

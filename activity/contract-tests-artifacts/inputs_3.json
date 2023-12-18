@@ -1,0 +1,12 @@
+{
+  "CreateInputs": {
+    "Name": "ContractTestActivityName-{{uuid}}",
+    "Tags": [
+      {
+        "Key": "Key2",
+        "Value": "Value2"
+      }
+    ]
+  },
+  "PatchInputs": []
+}

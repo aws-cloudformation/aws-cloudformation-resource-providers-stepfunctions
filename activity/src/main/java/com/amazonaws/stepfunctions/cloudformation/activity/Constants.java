@@ -1,7 +1,8 @@
 package com.amazonaws.stepfunctions.cloudformation.activity;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 
+import java.util.Collections;
 import java.util.Set;
 
 public class Constants {
@@ -11,9 +12,10 @@ public class Constants {
     public static final String ACTIVITY_ARN_NOT_FOUND_MESSAGE = "ActivityArnNotFound";
     public static final String ACTIVITY_DOES_NOT_EXIST_ERROR_CODE = "ActivityDoesNotExist";
     public static final String RESOURCE_NOT_FOUND_ERROR_CODE = "ResourceNotFound";
+    public static final String INVALID_TOKEN = "InvalidToken";
 
-    public static final Set<String> RESOURCE_NOT_FOUND_ERROR_CODES = Sets.newHashSet(
+    public static final Set<String> RESOURCE_NOT_FOUND_ERROR_CODES = Collections.unmodifiableSet(ImmutableSet.of(
             RESOURCE_NOT_FOUND_ERROR_CODE,
             ACTIVITY_DOES_NOT_EXIST_ERROR_CODE
-    );
+    ));
 }

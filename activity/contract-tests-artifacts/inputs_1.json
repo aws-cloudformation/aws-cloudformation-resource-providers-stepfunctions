@@ -1,0 +1,23 @@
+{
+  "CreateInputs": {
+    "Name": "ContractTestActivityName-{{uuid}}",
+    "Tags": [
+      {
+        "Key": "Key1",
+        "Value": "Value1"
+      }
+    ]
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/Tags/0/Value",
+      "value": "Value2"
+    },
+    {
+      "op": "replace",
+      "path": "/Tags/0/Key",
+      "value": "Key2"
+    }
+  ]
+}
