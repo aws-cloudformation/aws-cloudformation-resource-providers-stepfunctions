@@ -163,4 +163,3 @@ Returns the <code>Name</code> value.
 #### StateMachineRevisionId
 
 Returns the <code>StateMachineRevisionId</code> value.
-
