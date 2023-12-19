@@ -1,0 +1,34 @@
+{
+  "CreateInputs": {
+    "StateMachineName": "{{awsstepfunctionsstatemachinecto2}}-{{uuid}}",
+    "RoleArn": "{{awsstepfunctionsstatemachinecto1}}",
+    "StateMachineType": "STANDARD",
+    "Definition": {
+      "StartAt": "Hello",
+      "States": {
+        "Hello": {
+          "Type": "Pass",
+          "End": true
+        }
+      }
+    },
+    "Tags": [
+      {
+        "Key": "Key1",
+        "Value": "Value1"
+      }
+    ]
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/Tags/0/Value",
+      "value": "Value2"
+    },
+    {
+      "op": "replace",
+      "path": "/Tags/0/Key",
+      "value": "Key2"
+    }
+  ]
+}

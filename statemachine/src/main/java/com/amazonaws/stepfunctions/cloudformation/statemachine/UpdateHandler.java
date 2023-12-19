@@ -4,6 +4,7 @@ import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.AWSStepFunctionsClientBuilder;
 import com.amazonaws.services.stepfunctions.model.Tag;
 import com.amazonaws.services.stepfunctions.model.UpdateStateMachineRequest;
+import com.amazonaws.services.stepfunctions.model.UpdateStateMachineResult;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -42,7 +43,8 @@ public class UpdateHandler extends ResourceHandler {
 
             UpdateStateMachineRequest updateStateMachineRequest = buildUpdateStateMachineRequestFromModel(model);
 
-            proxy.injectCredentialsAndInvoke(updateStateMachineRequest, sfnClient::updateStateMachine);
+            UpdateStateMachineResult updateStateMachineResult = proxy.injectCredentialsAndInvoke(updateStateMachineRequest, sfnClient::updateStateMachine);
+            model.setStateMachineRevisionId(updateStateMachineResult.getRevisionId());
             updateTags(request, proxy, sfnClient);
 
             metricsRecorder.setOperationSuccessful(true);

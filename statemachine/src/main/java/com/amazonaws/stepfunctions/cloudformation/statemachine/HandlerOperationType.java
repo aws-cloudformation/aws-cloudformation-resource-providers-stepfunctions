@@ -8,5 +8,6 @@ public enum HandlerOperationType {
     CREATE,
     DELETE,
     READ,
-    UPDATE
+    UPDATE,
+    LIST
 }

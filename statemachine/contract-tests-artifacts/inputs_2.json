@@ -1,0 +1,45 @@
+{
+  "CreateInputs": {
+    "StateMachineName": "{{awsstepfunctionsstatemachinecto2}}-{{uuid}}",
+    "RoleArn": "{{awsstepfunctionsstatemachinecto1}}",
+    "StateMachineType": "STANDARD",
+    "Definition": {
+      "StartAt": "Hello",
+      "States": {
+        "Hello": {
+          "Type": "Pass",
+          "End": true
+        }
+      }
+    },
+    "LoggingConfiguration": {
+      "Level": "ALL",
+      "IncludeExecutionData": true,
+      "Destinations": [
+        {
+          "CloudWatchLogsLogGroup": {
+            "LogGroupArn": "{{awsstepfunctionsstatemachinecto3}}"
+          }
+        }
+      ]
+    },
+    "Tags": [
+      {
+        "Key": "Key1",
+        "Value": "Value1"
+      }
+    ]
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/Tags/0/Value",
+      "value": "Value2"
+    },
+    {
+      "op": "replace",
+      "path": "/Tags/0/Key",
+      "value": "Key2"
+    }
+  ]
+}

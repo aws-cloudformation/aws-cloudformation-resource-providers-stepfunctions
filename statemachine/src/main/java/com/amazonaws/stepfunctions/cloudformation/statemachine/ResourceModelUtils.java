@@ -51,6 +51,7 @@ public class ResourceModelUtils {
                 .roleArn(describeStateMachineResult.getRoleArn())
                 .stateMachineName(describeStateMachineResult.getName())
                 .stateMachineType(describeStateMachineResult.getType())
+                .stateMachineRevisionId(describeStateMachineResult.getRevisionId() != null ? describeStateMachineResult.getRevisionId() : Constants.STATE_MACHINE_INITIAL_REVISION_ID)
                 .build();
 
         final LoggingConfiguration loggingConfiguration = describeStateMachineResult.getLoggingConfiguration();

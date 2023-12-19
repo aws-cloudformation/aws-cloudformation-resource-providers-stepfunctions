@@ -1,9 +1,12 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineRequest;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineResult;
+import com.amazonaws.services.stepfunctions.model.DescribeStateMachineRequest;
 import com.amazonaws.services.stepfunctions.model.Tag;
+import com.google.common.base.Preconditions;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -42,6 +45,8 @@ public class CreateHandler extends ResourceHandler {
             validateDefinitionCount(model);
             processDefinition(proxy, model, metricsRecorder);
 
+            failIfStateMachineAlreadyExists(request, sfnClient, proxy);
+
             CreateStateMachineRequest createStateMachineRequest = buildCreateStateMachineRequestFromModel(model, tags);
 
             CreateStateMachineResult createStateMachineResult = proxy.injectCredentialsAndInvoke(createStateMachineRequest, sfnClient::createStateMachine);
@@ -49,6 +54,7 @@ public class CreateHandler extends ResourceHandler {
             updateModelFromResult(model, createStateMachineResult);
             // The model's name is only required if the handler operation is successful.
             model.setName(model.getStateMachineName());
+            model.setStateMachineRevisionId(Constants.STATE_MACHINE_INITIAL_REVISION_ID);
 
             ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
@@ -64,6 +70,42 @@ public class CreateHandler extends ResourceHandler {
             return handleDefaultError(request, e, metricsRecorder);
         } finally {
             logger.log(metricsRecorder.generateMetricsString());
+        }
+    }
+
+    private void failIfStateMachineAlreadyExists(final ResourceHandlerRequest<ResourceModel> request,
+                                                 final AWSStepFunctions sfnClient,
+                                                 final AmazonWebServicesClientProxy proxy) {
+        Preconditions.checkNotNull(request.getAwsPartition(), "Request partition should not be null.");
+        Preconditions.checkNotNull(request.getRegion(), "Request region should not be null.");
+        Preconditions.checkNotNull(request.getAwsAccountId(), "Request accountId should not be null.");
+        Preconditions.checkNotNull(request.getDesiredResourceState().getStateMachineName(), "Request state machine name should not be null.");
+
+        // arn:<PARTITION>:states:<REGION>:<ACCOUNT_ID>:stateMachine:<STATE_MACHINE_NAME>
+        final String stateMachineArn = String.format(
+                "arn:%s:states:%s:%s:stateMachine:%s",
+                request.getAwsPartition(),
+                request.getRegion(),
+                request.getAwsAccountId(),
+                request.getDesiredResourceState().getStateMachineName());
+
+        try {
+            proxy.injectCredentialsAndInvoke(new DescribeStateMachineRequest().withStateMachineArn(stateMachineArn), sfnClient::describeStateMachine);
+
+            // State machine already exists
+            throw getStateMachineAlreadyExistsException();
+        } catch (AmazonServiceException e) {
+            // State machine does not exist
+            if (Constants.STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE.equals(e.getErrorCode())) {
+                return;
+            }
+
+            // For backwards compatibility, do not fail the request if DescribeStateMachine permissions are not present
+            if (Constants.ACCESS_DENIED_ERROR_CODE.equals(e.getErrorCode())) {
+                return;
+            }
+
+            throw e;
         }
     }
 
@@ -85,5 +127,4 @@ public class CreateHandler extends ResourceHandler {
 
         return createStateMachineRequest;
     }
-
 }

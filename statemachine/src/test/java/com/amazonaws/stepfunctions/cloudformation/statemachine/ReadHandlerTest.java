@@ -48,6 +48,7 @@ public class ReadHandlerTest extends HandlerTestBase {
         describeStateMachineResult.setDefinition(DEFINITION);
         describeStateMachineResult.setRoleArn(ROLE_ARN);
         describeStateMachineResult.setType(EXPRESS_TYPE);
+        describeStateMachineResult.setRevisionId(STATE_MACHINE_REVISION_ID);
 
         final LoggingConfiguration loggingConfiguration = createLoggingConfiguration();
         describeStateMachineResult.setLoggingConfiguration(Translator.getLoggingConfiguration(loggingConfiguration));
@@ -80,6 +81,65 @@ public class ReadHandlerTest extends HandlerTestBase {
                 ROLE_ARN,
                 STATE_MACHINE_NAME,
                 EXPRESS_TYPE,
+                STATE_MACHINE_REVISION_ID,
+                loggingConfiguration,
+                tracingConfiguration,
+                null,
+                null,
+                null,
+                expectedTagEntries);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+        assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+    }
+
+    @Test
+    public void testSuccess_whenDescribeCallReturnsNullRevisionId_handlerSetsSpecialInitialRevisionIdKey() {
+        final DescribeStateMachineResult describeStateMachineResult = new DescribeStateMachineResult();
+        describeStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+        describeStateMachineResult.setName(STATE_MACHINE_NAME);
+        describeStateMachineResult.setDefinition(DEFINITION);
+        describeStateMachineResult.setRoleArn(ROLE_ARN);
+        describeStateMachineResult.setType(EXPRESS_TYPE);
+
+        final LoggingConfiguration loggingConfiguration = createLoggingConfiguration();
+        describeStateMachineResult.setLoggingConfiguration(Translator.getLoggingConfiguration(loggingConfiguration));
+
+        final TracingConfiguration tracingConfiguration = createTracingConfiguration(true);
+        describeStateMachineResult.setTracingConfiguration(Translator.getTracingConfiguration(tracingConfiguration));
+
+        final List<Tag> stateMachineTags = new ArrayList<>();
+        stateMachineTags.add(new Tag().withKey("Key1").withValue("Value1"));
+        stateMachineTags.add(new Tag().withKey("Key2").withValue("Value2"));
+
+        final ListTagsForResourceResult listTagsForResourceResult = new ListTagsForResourceResult();
+        listTagsForResourceResult.setTags(stateMachineTags);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class)))
+                .thenReturn(describeStateMachineResult)
+                .thenReturn(listTagsForResourceResult);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        final List<TagsEntry> expectedTagEntries = new ArrayList<>();
+        expectedTagEntries.add(new TagsEntry("Key1", "Value1"));
+        expectedTagEntries.add(new TagsEntry("Key2", "Value2"));
+
+        final ResourceModel expectedModel = new ResourceModel(
+                STATE_MACHINE_ARN,
+                STATE_MACHINE_NAME,
+                DEFINITION,
+                ROLE_ARN,
+                STATE_MACHINE_NAME,
+                EXPRESS_TYPE,
+                Constants.STATE_MACHINE_INITIAL_REVISION_ID,
                 loggingConfiguration,
                 tracingConfiguration,
                 null,
@@ -118,6 +178,7 @@ public class ReadHandlerTest extends HandlerTestBase {
         describeStateMachineResult.setDefinition(DEFINITION);
         describeStateMachineResult.setRoleArn(ROLE_ARN);
         describeStateMachineResult.setType(EXPRESS_TYPE);
+        describeStateMachineResult.setRevisionId(STATE_MACHINE_REVISION_ID);
 
         final LoggingConfiguration loggingConfiguration = createLoggingConfiguration();
         describeStateMachineResult.setLoggingConfiguration(Translator.getLoggingConfiguration(loggingConfiguration));
@@ -139,6 +200,7 @@ public class ReadHandlerTest extends HandlerTestBase {
                 ROLE_ARN,
                 STATE_MACHINE_NAME,
                 EXPRESS_TYPE,
+                STATE_MACHINE_REVISION_ID,
                 loggingConfiguration,
                 tracingConfiguration,
                 null,

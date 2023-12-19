@@ -34,7 +34,9 @@ public abstract class HandlerTestBase {
             "arn:aws:iam::000000000000:role/role' is not authorized to create managed-rule.");
     protected final static String AWS_ACCOUNT_ID = "1234567890";
     protected final static String REGION = "us-east-1";
+    protected final static String PARTITION = "aws";
     protected final static String STATE_MACHINE_NAME = "TestStateMachine";
+    protected final static String STATE_MACHINE_REVISION_ID = "0f4506cf-b036-44c1-bae2-0d27f23c59a6";
     protected final static String STATE_MACHINE_ARN =
             "arn:aws:states:us-east-1:1234567890:stateMachine:TestStateMachine";
 
