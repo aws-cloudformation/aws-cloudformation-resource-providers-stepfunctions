@@ -2,7 +2,7 @@
     "artifact_type": "RESOURCE",
     "typeName": "AWS::StepFunctions::Activity",
     "language": "java",
-    "runtime": "java8",
+    "runtime": "java8.al2",
     "entrypoint": "com.amazonaws.stepfunctions.cloudformation.activity.HandlerWrapper::handleRequest",
     "testEntrypoint": "com.amazonaws.stepfunctions.cloudformation.activity.HandlerWrapper::testEntrypoint",
     "settings": {
