@@ -122,6 +122,8 @@ public class MetricsRecorder {
                     setAreMultipleDefinitionsProvided(true);
                     break;
                 }
+                default:
+                    // Ignore
             }
         } else if (e instanceof CfnInvalidRequestException) {
             // CfnInvalidRequestExceptions prepend a string to the error message

@@ -19,6 +19,7 @@ public class ResourceModelUtilsTest extends HandlerTestBase {
         describeStateMachineResult.setDefinition(DEFINITION);
         describeStateMachineResult.setRoleArn(ROLE_ARN);
         describeStateMachineResult.setType(EXPRESS_TYPE);
+        describeStateMachineResult.setRevisionId(STATE_MACHINE_REVISION_ID);
 
         final LoggingConfiguration loggingConfiguration = createLoggingConfiguration();
         describeStateMachineResult.setLoggingConfiguration(Translator.getLoggingConfiguration(loggingConfiguration));
@@ -44,6 +45,7 @@ public class ResourceModelUtilsTest extends HandlerTestBase {
                 ROLE_ARN,
                 STATE_MACHINE_NAME,
                 EXPRESS_TYPE,
+                STATE_MACHINE_REVISION_ID,
                 loggingConfiguration,
                 tracingConfiguration,
                 null,

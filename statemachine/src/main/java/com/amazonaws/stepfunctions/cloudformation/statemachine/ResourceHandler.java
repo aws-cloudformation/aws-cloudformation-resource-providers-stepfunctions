@@ -39,6 +39,10 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
                     resultBuilder.errorCode(HandlerErrorCode.NotFound);
                     resultBuilder.message(amznException.getMessage());
                     resultBuilder.status(OperationStatus.FAILED);
+                } else if (Constants.STATE_MACHINE_ALREADY_EXISTS_ERROR_CODE.equals(errorCode)) {
+                    resultBuilder.errorCode(HandlerErrorCode.AlreadyExists);
+                    resultBuilder.message(amznException.getMessage());
+                    resultBuilder.status(OperationStatus.FAILED);
                 } else if (Constants.INVALID_REQUESTS_ERROR_CODES.contains(errorCode)) {
                     resultBuilder.errorCode(HandlerErrorCode.InvalidRequest);
                     resultBuilder.message(amznException.getMessage());
@@ -89,6 +93,14 @@ public abstract class ResourceHandler extends BaseHandler<CallbackContext> {
         AmazonServiceException exception = new AmazonServiceException(Constants.STATE_MACHINE_DOES_NOT_EXIST_ERROR_MESSAGE);
         exception.setStatusCode(400);
         exception.setErrorCode(Constants.STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE);
+
+        return exception;
+    }
+
+    protected AmazonServiceException getStateMachineAlreadyExistsException() {
+        AmazonServiceException exception = new AmazonServiceException(Constants.STATE_MACHINE_ALREADY_EXISTS_ERROR_MESSAGE);
+        exception.setStatusCode(400);
+        exception.setErrorCode(Constants.STATE_MACHINE_ALREADY_EXISTS_ERROR_CODE);
 
         return exception;
     }

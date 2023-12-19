@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineRequest;
 import com.amazonaws.services.stepfunctions.model.CreateStateMachineResult;
+import com.amazonaws.services.stepfunctions.model.DescribeStateMachineRequest;
 import com.amazonaws.stepfunctions.cloudformation.statemachine.s3.GetObjectFunction;
 import com.amazonaws.stepfunctions.cloudformation.statemachine.s3.GetObjectResult;
 import com.amazonaws.util.StringInputStream;
@@ -18,6 +19,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -68,6 +70,7 @@ public class CreateHandlerTest extends HandlerTestBase {
     @BeforeEach
     public void setup() {
         request = ResourceHandlerRequest.<ResourceModel>builder()
+                .awsPartition(PARTITION)
                 .region(REGION)
                 .awsAccountId(AWS_ACCOUNT_ID)
                 .desiredResourceState(ResourceModel.builder()
@@ -79,6 +82,9 @@ public class CreateHandlerTest extends HandlerTestBase {
                         .tracingConfiguration(createTracingConfiguration(TRACING_CONFIGURATION_DISABLED))
                         .build())
                 .build();
+
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeStateMachineRequest.class), Mockito.any(Function.class)))
+                .thenThrow(stateMachineDoesNotExistException);
     }
 
     @Test
@@ -97,7 +103,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(createStateMachineRequest), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.eq(createStateMachineRequest), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
             = handler.handleRequest(proxy, request, null, logger);
@@ -111,13 +117,63 @@ public class CreateHandlerTest extends HandlerTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
         assertThat(response.getResourceModel().getArn()).isEqualTo(STATE_MACHINE_ARN);
+        assertThat(response.getResourceModel().getStateMachineRevisionId()).isEqualTo(Constants.STATE_MACHINE_INITIAL_REVISION_ID);
+    }
+
+    @Test
+    public void handleStateMachineAlreadyExists_throwsAlreadyExistsHandlerCode() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(null);
+
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
+        assertThat(response.getMessage()).contains(Constants.STATE_MACHINE_ALREADY_EXISTS_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void handleAccessDeniedOnExistenceCheck_returnsSuccess() {
+        request.getDesiredResourceState().setDefinitionString("{}");
+
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(accessDeniedException);
+
+        CreateStateMachineRequest createStateMachineRequest = new CreateStateMachineRequest();
+        createStateMachineRequest.setName(STATE_MACHINE_NAME);
+        createStateMachineRequest.setType(Constants.STANDARD_STATE_MACHINE_TYPE);
+        createStateMachineRequest.setDefinition("{}");
+        createStateMachineRequest.setRoleArn(ROLE_ARN);
+        createStateMachineRequest.setLoggingConfiguration(Translator.getLoggingConfiguration(createLoggingConfiguration()));
+        createStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(createTracingConfiguration(TRACING_CONFIGURATION_DISABLED)));
+        createStateMachineRequest.setTags(new ArrayList<>());
+
+        CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
+        createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
+
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.eq(createStateMachineRequest), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+        assertThat(response.getResourceModel().getArn()).isEqualTo(STATE_MACHINE_ARN);
+        assertThat(response.getResourceModel().getStateMachineRevisionId()).isEqualTo(Constants.STATE_MACHINE_INITIAL_REVISION_ID);
     }
 
     @Test
     public void test500() {
         request.getDesiredResourceState().setDefinitionString("{}");
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -155,7 +211,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -192,7 +248,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -233,7 +289,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(GetObjectRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -258,7 +315,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(GetObjectRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -283,7 +341,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(GetObjectRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -313,7 +372,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(GetObjectRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -343,7 +403,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(GetObjectRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -373,7 +434,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(GetObjectRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -399,7 +461,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -425,7 +487,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -455,7 +517,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(GetObjectRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -485,7 +548,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(GetObjectRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -515,7 +579,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(GetObjectRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -541,7 +606,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -567,7 +632,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -588,7 +653,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -608,7 +673,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -626,7 +691,7 @@ public class CreateHandlerTest extends HandlerTestBase {
 
         GetObjectFunction function = new GetObjectFunction(client);
 
-        Mockito.when(client.getObject(request)).thenReturn(s3Object);
+        Mockito.lenient().when(client.getObject(request)).thenReturn(s3Object);
 
         assertThat(function.get(request)).isEqualTo(new GetObjectResult(s3Object));
     }
@@ -704,7 +769,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -723,7 +788,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -739,7 +804,7 @@ public class CreateHandlerTest extends HandlerTestBase {
     public void testLogsCorrectOperationStatus_Failure() {
         request.getDesiredResourceState().setDefinitionString("{}");
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenThrow(exception500);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -761,7 +826,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -781,7 +846,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -801,7 +866,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -821,7 +886,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -841,7 +906,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -861,7 +926,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -881,7 +946,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -949,7 +1014,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(GetObjectRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -972,7 +1038,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(GetObjectRequest.class), Mockito.any(Function.class))).thenReturn(getObjectResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(CreateStateMachineRequest.class), Mockito.any(Function.class))).thenReturn(createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -995,7 +1062,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -1018,7 +1085,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -1041,8 +1108,8 @@ public class CreateHandlerTest extends HandlerTestBase {
         CreateStateMachineResult createStateMachineResult = new CreateStateMachineResult();
         createStateMachineResult.setStateMachineArn(STATE_MACHINE_ARN);
 
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
-        Mockito.when(mockS3ObjectMetadata.getContentLength()).thenReturn((long) (Constants.MAX_DEFINITION_SIZE + 1));
+        Mockito.lenient().when(proxy.injectCredentialsAndInvoke(Mockito.any(), Mockito.any(Function.class))).thenReturn(getObjectResult, createStateMachineResult);
+        Mockito.lenient().when(mockS3ObjectMetadata.getContentLength()).thenReturn((long) (Constants.MAX_DEFINITION_SIZE + 1));
 
         ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);

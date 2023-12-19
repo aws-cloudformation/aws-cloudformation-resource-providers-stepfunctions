@@ -35,6 +35,7 @@ Resources:
                 - "states:CreateStateMachine"
                 - "states:DeleteStateMachine"
                 - "states:DescribeStateMachine"
+                - "states:ListStateMachines"
                 - "states:ListTagsForResource"
                 - "states:TagResource"
                 - "states:UntagResource"

@@ -1,7 +1,8 @@
 package com.amazonaws.stepfunctions.cloudformation.statemachine;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 
+import java.util.Collections;
 import java.util.Set;
 
 public class Constants {
@@ -20,10 +21,13 @@ public class Constants {
     public static final String DEFINITION_MISSING_ERROR_MESSAGE = "Property validation failed. Required key [DefinitionS3Location], [DefinitionString] or [Definition] not found.";
     public static final String DEFINITION_REDUNDANT_ERROR_MESSAGE = "Property validation failed. Please use one of [DefinitionS3Location], [DefinitionString] or [Definition].";
     public static final String DEFINITION_SUBSTITUTION_INVALID_TYPE_ERROR_MESSAGE = "Invalid definition substitution type. Input should be either String, Integer, or Boolean";
+    public static final String STATE_MACHINE_ALREADY_EXISTS_ERROR_CODE = "StateMachineAlreadyExists";
+    public static final String STATE_MACHINE_ALREADY_EXISTS_ERROR_MESSAGE = "State machine already exists";
     public static final String STATE_MACHINE_DOES_NOT_EXIST_ERROR_CODE = "StateMachineDoesNotExist";
     public static final String STATE_MACHINE_DOES_NOT_EXIST_ERROR_MESSAGE = "State machine does not exist";
-    public static final Set<String> INVALID_REQUESTS_ERROR_CODES = Sets.newHashSet("InvalidArn", "InvalidDefinition", "InvalidLoggingConfiguration", "InvalidName");
+    public static final Set<String> INVALID_REQUESTS_ERROR_CODES = Collections.unmodifiableSet(ImmutableSet.of("InvalidArn", "InvalidDefinition", "InvalidLoggingConfiguration", "InvalidName"));
     public static final String STANDARD_STATE_MACHINE_TYPE = "STANDARD";
     public static final String EXPRESS_STATE_MACHINE_TYPE = "EXPRESS";
     public static final String METRICS_LOGGING_PREFIX = "METRICS";
+    public static final String STATE_MACHINE_INITIAL_REVISION_ID = "INITIAL";
 }

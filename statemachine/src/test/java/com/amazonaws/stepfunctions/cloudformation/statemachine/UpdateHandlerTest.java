@@ -62,6 +62,14 @@ public class UpdateHandlerTest extends HandlerTestBase {
         request.getDesiredResourceState().setDefinitionString("{}");
         request.getPreviousResourceState().setDefinitionString("{}");
 
+        UpdateStateMachineRequest updateStateMachineRequest = new UpdateStateMachineRequest();
+        updateStateMachineRequest.setRoleArn(ROLE_ARN);
+        updateStateMachineRequest.setDefinition("{}");
+        updateStateMachineRequest.setStateMachineArn(STATE_MACHINE_ARN);
+
+        UpdateStateMachineResult updateStateMachineResult = new UpdateStateMachineResult();
+        updateStateMachineResult.setRevisionId(STATE_MACHINE_REVISION_ID);
+
         UntagResourceRequest untagResourceRequest = new UntagResourceRequest();
         untagResourceRequest.setResourceArn(STATE_MACHINE_ARN);
         untagResourceRequest.setTagKeys(Lists.newArrayList("K1", "K2"));
@@ -82,6 +90,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
         request.setDesiredResourceTags(resourceTags);
         request.setPreviousResourceTags(previousResourceTags);
 
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any(Function.class))).thenReturn(updateStateMachineResult);
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(untagResourceRequest), Mockito.any(Function.class))).thenReturn(new UntagResourceResult());
         Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(tagResourceRequest), Mockito.any(Function.class))).thenReturn(new TagResourceResult());
 
@@ -123,11 +132,12 @@ public class UpdateHandlerTest extends HandlerTestBase {
         updateStateMachineRequest.setDefinition("{}");
         updateStateMachineRequest.setLoggingConfiguration(Translator.getLoggingConfiguration(createLoggingConfiguration()));
 
-        ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, null, logger);
+        UpdateStateMachineResult updateStateMachineResult = new UpdateStateMachineResult();
+        updateStateMachineResult.setRevisionId(STATE_MACHINE_REVISION_ID);
 
-        Mockito.verify(proxy, Mockito.times(1))
-                .injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any(Function.class));
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any(Function.class))).thenReturn(updateStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -151,11 +161,12 @@ public class UpdateHandlerTest extends HandlerTestBase {
         updateStateMachineRequest.setDefinition("{}");
         updateStateMachineRequest.setTracingConfiguration(Translator.getTracingConfiguration(createTracingConfiguration(TRACING_CONFIGURATION_DISABLED)));
 
-        ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, null, logger);
+        UpdateStateMachineResult updateStateMachineResult = new UpdateStateMachineResult();
+        updateStateMachineResult.setRevisionId(STATE_MACHINE_REVISION_ID);
 
-        Mockito.verify(proxy, Mockito.times(1))
-                .injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any(Function.class));
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any(Function.class))).thenReturn(updateStateMachineResult);
+
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -203,7 +214,17 @@ public class UpdateHandlerTest extends HandlerTestBase {
         request.getDesiredResourceState().setDefinitionString("{}");
         request.getPreviousResourceState().setDefinitionString("{}");
 
-        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
+        UpdateStateMachineRequest updateStateMachineRequest = new UpdateStateMachineRequest();
+        updateStateMachineRequest.setRoleArn(ROLE_ARN);
+        updateStateMachineRequest.setDefinition("{}");
+        updateStateMachineRequest.setStateMachineArn(STATE_MACHINE_ARN);
+
+        UpdateStateMachineResult updateStateMachineResult = new UpdateStateMachineResult();
+        updateStateMachineResult.setRevisionId(STATE_MACHINE_REVISION_ID);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any(Function.class))).thenReturn(updateStateMachineResult);
+
+        handler.handleRequest(proxy, request, null, logger);
 
         Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
         List<String> loggedStrings = argumentCaptor.getAllValues();
@@ -217,7 +238,17 @@ public class UpdateHandlerTest extends HandlerTestBase {
         request.getDesiredResourceState().setDefinitionString("{}");
         request.getPreviousResourceState().setDefinitionString("{}");
 
-        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
+        UpdateStateMachineRequest updateStateMachineRequest = new UpdateStateMachineRequest();
+        updateStateMachineRequest.setRoleArn(ROLE_ARN);
+        updateStateMachineRequest.setDefinition("{}");
+        updateStateMachineRequest.setStateMachineArn(STATE_MACHINE_ARN);
+
+        UpdateStateMachineResult updateStateMachineResult = new UpdateStateMachineResult();
+        updateStateMachineResult.setRevisionId(STATE_MACHINE_REVISION_ID);
+
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.eq(updateStateMachineRequest), Mockito.any(Function.class))).thenReturn(updateStateMachineResult);
+
+        handler.handleRequest(proxy, request, null, logger);
 
         Mockito.verify(logger, Mockito.times(2)).log(argumentCaptor.capture());
         List<String> loggedStrings = argumentCaptor.getAllValues();

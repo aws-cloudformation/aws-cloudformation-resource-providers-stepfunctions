@@ -1,0 +1,49 @@
+Resources:
+  ContractTestStateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - !Sub states.${AWS::Region}.amazonaws.com
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: CWLogPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogDelivery"
+                  - "logs:GetLogDelivery"
+                  - "logs:UpdateLogDelivery"
+                  - "logs:DeleteLogDelivery"
+                  - "logs:ListLogDeliveries"
+                  - "logs:PutResourcePolicy"
+                  - "logs:DescribeResourcePolicies"
+                  - "logs:DescribeLogGroups"
+                Resource: "*"
+
+  ContractTestCloudWatchLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/vendedlogs/${AWS::StackName}"
+
+Outputs:
+  StateMachineExecutionRole:
+    Value: !GetAtt ContractTestStateMachineRole.Arn
+    Export:
+      Name: !Sub awsstepfunctionsstatemachinecto1-${AWS::StackName}
+  ContractTestStateMachineName:
+    Value: ContractTestStateMachine
+    Export:
+      Name: !Sub awsstepfunctionsstatemachinecto2-${AWS::StackName}
+  CloudWatchLogGroupArn:
+    Value: !GetAtt ContractTestCloudWatchLogGroup.Arn
+    Export:
+      Name: !Sub awsstepfunctionsstatemachinecto3-${AWS::StackName}
