@@ -15,5 +15,6 @@
         ],
         "protocolVersion": "2.0.0"
     },
+    "logProcessorEnabled": "true",
     "executableEntrypoint": "com.amazonaws.stepfunctions.cloudformation.statemachine.HandlerWrapperExecutable"
 }
