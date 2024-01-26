@@ -14,7 +14,9 @@ import com.amazonaws.services.stepfunctions.AWSStepFunctionsClientBuilder;
 public class ClientBuilder {
 
     public static AmazonS3 getS3Client() {
-        return AmazonS3ClientBuilder.standard().build();
+        return AmazonS3ClientBuilder.standard()
+                .withForceGlobalBucketAccessEnabled(true)
+                .build();
     }
 
     public static AWSStepFunctions getClient() {
