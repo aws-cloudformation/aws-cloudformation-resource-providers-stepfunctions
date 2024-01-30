@@ -1,6 +1,6 @@
 package com.amazonaws.stepfunctions.cloudformation.activity;
 
-import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.stepfunctions.model.ActivityDoesNotExistException;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityRequest;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,20 +38,87 @@ public class DeleteHandlerTest extends HandlerTestBase {
     }
 
     @Test
-    public void testSuccess() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class))).thenReturn(new DescribeActivityResult());
+    public void testDeleteHandler_describeActivityThrowsErrorAfterDeletion_returnsSuccess() {
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class)))
+                .thenReturn(new DescribeActivityResult())
+                .thenThrow(ActivityDoesNotExistException.class);    // Describe call after deletion
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-            = handler.handleRequest(proxy, request, null, logger);
+                = handler.handleRequest(proxy, request, null, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackContext()).isNotNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void testDeleteHandler_describeActivityReturnsActivityDetailsAfterDeletion_returnsInProgress() {
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class)))
+                .thenReturn(new DescribeActivityResult())
+                .thenReturn(new DescribeActivityResult());  // Describe call after deletion
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
+        assertThat(response.getCallbackContext()).isNotNull();
+        assertThat(response.getCallbackDelaySeconds()).isNotEqualTo(0);
+    }
+
+    @Test
+    public void testDeleteHandler_callbackWithCallbackContext_describeActivityReturnsActivityDetails_returnsInProgress() {
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class)))
+                .thenReturn(new DescribeActivityResult());
+
+        final CallbackContext callbackContext = CallbackContext.builder()
+                .isActivityDeletionStarted(true)
+                .retryCount(1)
+                .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, callbackContext, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
+        assertThat(response.getCallbackContext()).isNotNull();
+        assertThat(response.getCallbackDelaySeconds()).isNotEqualTo(0);
+    }
+
+    @Test
+    public void testDeleteHandler_callbackWithCallbackContext_retriesAreExhausted_returnsSuccess_failSafeToPreserveBackwardsCompatibility() {
+        final CallbackContext callbackContext = CallbackContext.builder()
+                .isActivityDeletionStarted(true)
+                .retryCount(4)
+                .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, callbackContext, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+    }
+
+    @Test
+    public void testDeleteHandler_callbackWithCallbackContext_describeActivityThrowsError_returnsSuccess() {
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class)))
+                .thenThrow(ActivityDoesNotExistException.class);
+
+        final CallbackContext callbackContext = CallbackContext.builder()
+                .isActivityDeletionStarted(true)
+                .retryCount(1)
+                .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, callbackContext, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
     }
 
     @Test
