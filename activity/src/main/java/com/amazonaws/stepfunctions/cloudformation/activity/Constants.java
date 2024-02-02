@@ -18,4 +18,7 @@ public class Constants {
             RESOURCE_NOT_FOUND_ERROR_CODE,
             ACTIVITY_DOES_NOT_EXIST_ERROR_CODE
     ));
+
+    // Setting 60 seconds stabilization delay to account for eventual consistency of DescribeActivity call
+    public static final int CALLBACK_DELAY_SECONDS_FOR_STABILIZATION = 60;
 }
