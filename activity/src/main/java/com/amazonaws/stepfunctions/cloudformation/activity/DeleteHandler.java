@@ -42,7 +42,7 @@ public class DeleteHandler extends ResourceHandler {
                 int currentRetryCount = callbackContext.getRetryCount();
                 if (currentRetryCount <= RETRY_COUNTER) {
                     callbackContext.setRetryCount(currentRetryCount + 1);
-                    return stabilizeDeleteActivity(proxy, model, callbackContext.getRetryCount(), logger);
+                    return stabilizeDeleteActivity(proxy, model, currentRetryCount + 1, logger);
                 } else {
                     // Failsafe
                     // If somehow DescribeActivity is still able to describe the deleted activity after 3 retry

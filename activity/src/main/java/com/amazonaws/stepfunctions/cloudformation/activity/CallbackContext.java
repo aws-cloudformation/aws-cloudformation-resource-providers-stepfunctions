@@ -6,10 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.amazon.cloudformation.proxy.StdCallbackContext;
 
-@lombok.Getter
-@lombok.Setter
-@lombok.ToString
-@lombok.EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
