@@ -38,20 +38,29 @@ public class DeleteHandlerTest extends HandlerTestBase {
     }
 
     @Test
-    public void testSuccess() {
-        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class))).thenReturn(new DescribeActivityResult());
+    public void testDeleteHandler_pausesFor60sToStabilize_returnsSuccess() {
+        Mockito.when(proxy.injectCredentialsAndInvoke(Mockito.any(DescribeActivityRequest.class), Mockito.any(Function.class)))
+                .thenReturn(new DescribeActivityResult());
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-            = handler.handleRequest(proxy, request, null, logger);
+                = handler.handleRequest(proxy, request, null, logger);
 
         assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isNull();
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
+        assertThat(response.getCallbackContext()).isNotNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(60);
+
+        final ProgressEvent<ResourceModel, CallbackContext> responseFromCallback
+                = handler.handleRequest(proxy, request, response.getCallbackContext(), logger);
+
+        assertThat(responseFromCallback).isNotNull();
+        assertThat(responseFromCallback.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(responseFromCallback.getCallbackContext()).isNull();
+        assertThat(responseFromCallback.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(responseFromCallback.getResourceModel()).isNull();
+        assertThat(responseFromCallback.getResourceModels()).isNull();
+        assertThat(responseFromCallback.getMessage()).isNull();
+        assertThat(responseFromCallback.getErrorCode()).isNull();
     }
 
     @Test

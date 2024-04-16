@@ -1,12 +1,18 @@
 package com.amazonaws.stepfunctions.cloudformation.activity;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.amazon.cloudformation.proxy.StdCallbackContext;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class CallbackContext {
-
+public class CallbackContext extends StdCallbackContext {
+    @Builder.Default
+    private boolean propagationDelayDone = false;
 }
