@@ -13,6 +13,6 @@ import software.amazon.cloudformation.proxy.StdCallbackContext;
 @AllArgsConstructor
 @Builder
 public class CallbackContext extends StdCallbackContext {
-    private boolean isActivityDeletionStarted;
-    private int retryCount;
+    @Builder.Default
+    private boolean propagationDelayDone = false;
 }
