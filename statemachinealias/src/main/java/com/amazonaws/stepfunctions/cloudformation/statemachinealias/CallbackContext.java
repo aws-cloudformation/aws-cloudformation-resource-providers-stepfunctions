@@ -3,6 +3,7 @@ package com.amazonaws.stepfunctions.cloudformation.statemachinealias;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Builder;
+
 import java.time.Instant;
 
 import software.amazon.cloudformation.proxy.StdCallbackContext;
