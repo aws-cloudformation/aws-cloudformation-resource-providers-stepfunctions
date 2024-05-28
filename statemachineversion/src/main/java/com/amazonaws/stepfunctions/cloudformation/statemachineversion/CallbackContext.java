@@ -3,6 +3,7 @@ package com.amazonaws.stepfunctions.cloudformation.statemachineversion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.amazon.cloudformation.proxy.StdCallbackContext;
 
@@ -10,6 +11,7 @@ import software.amazon.cloudformation.proxy.StdCallbackContext;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(callSuper = true)
 public class CallbackContext extends StdCallbackContext {
     @Builder.Default
     private boolean deletionStarted = false;
